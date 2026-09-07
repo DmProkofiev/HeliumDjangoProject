@@ -38,14 +38,14 @@
 
 ## Технологический стек
 
-| Компонент          | Технология                                      | Назначение |
-|--------------------|------------------------------------------------|------------|
-| Backend            | Django 4.x (MVT)                               | ORM, админка, views, templates |
-| База данных        | PostgreSQL + `pg_trgm`                         | Хранение, полнотекстовый и нечёткий поиск |
-| Real-time          | Django Channels (WebSocket)                    | Чаты, уведомления |
-| Платежи            | YooKassa (тестовый режим)                      | Эскроу-счета |
-| Фронтенд           | Django Templates + Bootstrap + JavaScript      | SSR, AJAX, WebSocket |
-| Деплой             | Docker, docker-compose, nginx, gunicorn        | Контейнеризация и проксирование |
+| Компонент   | Технология                                      | Назначение |
+|-------------|------------------------------------------------|------------|
+| Backend     | Django 4.x (MVT)                               | ORM, админка, views, templates |
+| База данных | PostgreSQL + `pg_trgm`                         | Хранение, полнотекстовый и нечёткий поиск |
+| Real-time   | Django Channels (WebSocket)                    | Чаты, уведомления |
+| Платежи     | YooKassa (тестовый режим)                      | Эскроу-счета |
+| FrontEnd    | Django Templates + Bootstrap + JavaScript      | SSR, AJAX, WebSocket |
+| Деплой      | Docker, docker-compose, nginx, gunicorn        | Контейнеризация и проксирование |
 
 > **Рекомендации** реализованы без машинного обучения: используются простые правила на основе категорий, тегов, популярности и истории взаимодействий пользователя.
 >
