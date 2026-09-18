@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Доступ запрещён{% endblock %}
+
+{% block content %}
+<h1>Доступ запрещён</h1>
+<p>Вы не являетесь участником этого диалога</p>
+<a href="{% url 'chats:list' %}">Вернуться к списку диалогов</a>
+{% endblock %}

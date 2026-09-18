@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Мои Диалоги{% endblock %}
+
+{% block content %}
+<h1>Мои Диалоги</h1>
+
+{% if chats_data %}
+    <ul class="chat-list">
+        {% for item in chats_data %}
+            <li class="chat-item {% if item.unread %}unread{% endif %}">
+                <a href="{% url 'chats:detail' item.chat.id %}">
+                    <strong>{{ item.other.username }}</strong>
+                    {% if item.chat.publication %}
+                        <span class="publication">— по «{{ item.chat.publication.title }}»</span>
+                    {% endif %}
+                    {% if item.last_message %}
+                        <div class="last-message">
+                            {{ item.last_message.author.username }}: {{ item.last_message.text|truncatechars:60 }}
+                        </div>
+                    {% endif %}
+                    {% if item.unread %}
+                        <span class="badge">{{ item.unread }}</span>
+                    {% endif %}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>У вас пока нет диалогов</p>
+{% endif %}
+{% endblock %}

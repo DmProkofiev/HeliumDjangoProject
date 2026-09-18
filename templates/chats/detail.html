@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Чат с {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<h1>Чат с {{ other_user.username }}</h1>
+{% if chat.publication %}
+    <p class="publication-link">
+        По публикации:
+        <a href="{% url 'core:publication_detail' chat.publication.slug %}">
+            {{ chat.publication.title }}
+        </a>
+    </p>
+{% endif %}
+
+<div id="messages" class="messages" data-chat-id="{{ chat.id }}" data-user-id="{{ request.user.id }}">
+    {% for message in messages %}
+        <div class="message {% if message.author_id == request.user.id %}own{% else %}other{% endif %}"
+             data-message-id="{{ message.id }}">
+            <span class="author">{{ message.author.username }}</span>
+            <span class="text">{{ message.text }}</span>
+            <span class="time">{{ message.created_at|date:"d.m.Y H:i" }}</span>
+        </div>
+    {% endfor %}
+</div>
+
+<form id="send-form" class="send-form">
+    {% csrf_token %}
+    <textarea id="message-input" rows="2" placeholder="Введите сообщение..."></textarea>
+    <button type="submit">Отправить</button>
+</form>
+
+<script>
+(function () {
+    const chatId = document.getElementById('messages').dataset.chatId;
+    const currentUserId = parseInt(document.getElementById('messages').dataset.userId, 10);
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('message-input');
+    const form = document.getElementById('send-form');
+
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/chat/${chatId}/`);
+
+    function scrollToBottom() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function appendMessage(data) {
+        const isOwn = parseInt(data.author_id, 10) === currentUserId;
+        const el = document.createElement('div');
+        el.className = 'message ' + (isOwn ? 'own' : 'other');
+        el.dataset.messageId = data.message_id;
+        el.innerHTML = `
+            <span class="author">${data.author}</span>
+            <span class="text"></span>
+            <span class="time"></span>
+        `;
+        el.querySelector('.text').textContent = data.text;
+        const date = new Date(data.created_at);
+        el.querySelector('.time').textContent = date.toLocaleString();
+        messagesDiv.appendChild(el);
+        scrollToBottom();
+    }
+
+    socket.onopen = () => console.log('WebSocket открыт');
+    socket.onmessage = (e) => {
+        try { appendMessage(JSON.parse(e.data)); } catch (err) { console.error(err); }
+    };
+    socket.onerror = (e) => console.error('WebSocket ошибка', e);
+    socket.onclose = () => console.warn('WebSocket закрыт');
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        if (socket.readyState !== WebSocket.OPEN) {
+            alert('Нет соединения. Обновите страницу.');
+            return;
+        }
+        socket.send(JSON.stringify({ text: text }));
+        input.value = '';
+    });
+
+    // Отправка по Ctrl+Enter
+    input.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'Enter') {
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    scrollToBottom();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Helium — маркетплейс услуг{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <h1>Helium - найдется что угодно</h1>
+    <p>Размещайте заказы, предлагайте услуги, общайтесь и безопасно оплачивайте</p>
+</section>
+
+{% if user.is_authenticated and recommendations %}
+    <section class="recommendations">
+        <h2>Рекомендации для вас</h2>
+        <div class="publication-grid">
+            {% for pub in recommendations %}
+                <article class="publication-card">
+                    {% if pub.image %}
+                        <img src="{{ pub.image.url }}" alt="{{ pub.title }}">
+                    {% endif %}
+                    <h3>
+                        <a href="{% url 'core:publication_detail' pub.slug %}">{{ pub.title }}</a>
+                    </h3>
+                    <p class="category">{{ pub.category.name|default:'Без категории' }}</p>
+                    <p class="price">{{ pub.get_price_display }}</p>
+                    <p class="author">Автор: {{ pub.author.username }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+<section class="latest">
+    <h2>Новые услуги</h2>
+    {% if latest_services %}
+        <div class="publication-grid">
+            {% for pub in latest_services %}
+                <article class="publication-card">
+                    {% if pub.image %}
+                        <img src="{{ pub.image.url }}" alt="{{ pub.title }}">
+                    {% endif %}
+                    <h3>
+                        <a href="{% url 'core:publication_detail' pub.slug %}">{{ pub.title }}</a>
+                    </h3>
+                    <p class="category">{{ pub.category.name|default:'Без категории' }}</p>
+                    <p class="price">{{ pub.get_price_display }}</p>
+                    <p class="author">Автор: {{ pub.author.username }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Пока нет опубликованных услуг</p>
+    {% endif %}
+</section>
+
+<section class="categories">
+    <h2>Категории</h2>
+    {% if categories %}
+        <ul class="category-list">
+            {% for cat in categories %}
+                <li>
+                    <a href="{% url 'core:publication_list' %}?category={{ cat.id }}">
+                        {{ cat.name }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Категории ещё не добавлены</p>
+    {% endif %}
+</section>
+
+{% endblock %}
