@@ -2,7 +2,7 @@
 
 **Helium** - это соверменный маркетплейс, где заказчики размещают заказы на услуги (дизайн, программирование, ремонт, консультации), а исполнители откликаются на них. Встроенная система рекомендаций на основе правил и анализа поведения предлагает пользователям подходящие услуги и исполнителей.
 
-![](https://github.com/DmProkofiev/PyFinancialManager/blob/main/Resources/CoverProject.jpeg)   
+![](https://github.com/DmProkofiev/HeliumDjangoProject/blob/main/static/img/CoverProject.jpeg)   
 
 Архитектура **MVT (Model-View-Template)**.  
 Динамические части (автодополнение, чаты, уведомления) работают через AJAX и WebSocket (Django Channels).
