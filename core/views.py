@@ -6,32 +6,20 @@ from core.models import Publication, Category, Tag
 def index_view(request):
     publication_type = request.GET.get('type', 'service')
 
-    publications = Publication.objects.filter(
-        publication_type=publication_type,
-        status='active',
-    ).select_related('author', 'category').prefetch_related('tags')
+    publications = Publication.objects.filter(publication_type=publication_type,status='active',).select_related('author', 'category').prefetch_related('tags')
 
     # Поиск
     query = request.GET.get('q')
     if query:
-        publications = publications.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(category__name__icontains=query) |
-            Q(tags__name__icontains=query) |
-            Q(author__username__icontains=query)
-        ).distinct()
-
+        publications = publications.filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(category__name__icontains=query) | Q(tags__name__icontains=query) | Q(author__username__icontains=query)).distinct()
     # Фильтр по категории
     category_id = request.GET.get('category')
     if category_id:
         publications = publications.filter(category_id=category_id)
-
     # Фильтр по тегу
     tag_id = request.GET.get('tag')
     if tag_id:
         publications = publications.filter(tags__id=tag_id)
-
     # Фильтр по цене
     price_min = request.GET.get('price_min')
     price_max = request.GET.get('price_max')
@@ -39,18 +27,16 @@ def index_view(request):
         publications = publications.filter(price__gte=price_min)
     if price_max:
         publications = publications.filter(price__lte=price_max)
-
     # Сортировка
     sort = request.GET.get('sort', '-created_at')
     allowed_sorts = {'-created_at', 'created_at', 'price', '-price', 'title', '-title'}
     if sort in allowed_sorts:
         publications = publications.order_by(sort)
-
     # Пагинация
     paginator = Paginator(publications, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
 
-    # Рекомендации (позже)
+    # Рекомендации (недоделано)
     recommendations = []
     if request.user.is_authenticated:
         try:

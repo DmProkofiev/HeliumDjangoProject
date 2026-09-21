@@ -41,6 +41,7 @@ header nav {
     display: flex;
     align-items: center;
     gap: 15px;
+    width: 100%;
 }
 
 header nav a {
@@ -48,6 +49,7 @@ header nav a {
     padding: 8px 16px;
     border-radius: 8px;
     transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 header nav a:hover {
@@ -57,6 +59,7 @@ header nav a:hover {
 
 header nav span {
     color: #FFFFFF;
+    white-space: nowrap;
 }
 
 main {
@@ -85,6 +88,7 @@ footer p {
     font-size: 14px;
 }
 
+/* Логотип (потом исправить) */
 .logo-helium {
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 26px;
@@ -93,6 +97,7 @@ footer p {
     text-transform: uppercase;
     color: #FFFFFF;
     text-decoration: none;
+    flex-shrink: 0;
     filter:
         drop-shadow(0 0 6px rgba(0, 200, 255, 0.7))
         drop-shadow(0 0 14px rgba(0, 255, 136, 0.5));
@@ -105,7 +110,7 @@ footer p {
     align-items: center;
     flex: 1;
     max-width: 800px;
-    min-width: 600px;
+    min-width: 200px;
 }
 
 .search-input {
@@ -146,7 +151,7 @@ footer p {
     background: #00FF88;
 }
 
-/* Иконка лупы на чистом CSS */
+/* Иконка лупы */
 .icon-search {
     position: relative;
     display: inline-block;
@@ -188,7 +193,7 @@ footer p {
     border: 2px solid rgba(255, 255, 255, 0.6);
 }
 
-/* Сообщения */
+/* Сообщения*/
 .messages {
     list-style: none;
     padding: 0;
@@ -216,28 +221,11 @@ footer p {
     border-left-color: #E53935;
 }
 
-/* Адаптив */
-@media (max-width: 900px) {
-    header {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    header nav {
-        flex-wrap: wrap;
-        width: 100%;
-    }
-    .search-form {
-        order: 3;
-        flex-basis: 100%;
-        max-width: none;
-    }
-}
-
 .menu-wrapper {
     position: relative;
+    flex-shrink: 0;
 }
 
-/* Скрываем сам чекбокс — он нужен только как переключатель */
 .menu-toggle {
     position: absolute;
     opacity: 0;
@@ -264,7 +252,6 @@ footer p {
     background: rgba(255, 255, 255, 0.28);
 }
 
-/* Три полоски */
 .burger-btn span {
     display: block;
     height: 2px;
@@ -274,7 +261,7 @@ footer p {
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-/* Анимация превращения в крестик, когда меню открыто */
+/* Превращение в крестик при открытом меню */
 .menu-toggle:checked + .burger-btn span:nth-child(1) {
     transform: translateY(6px) rotate(45deg);
 }
@@ -285,15 +272,22 @@ footer p {
     transform: translateY(-6px) rotate(-45deg);
 }
 
-/* Панель с категориями (по умолчанию скрыта) */
+/* Панель с категориями */
 .menu-panel {
     position: absolute;
     top: calc(100% + 12px);
     left: 0;
-    min-width: 240px;
+    min-width: 260px;
+    max-width: 320px;
+
+    /* Ограничение высоты и прокрутка колесом */
+    max-height: min(500px, calc(100vh - 140px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
     background: #FFFFFF;
     border-radius: 12px;
-    padding: 14px 8px;
+    padding: 0 8px 14px;
     box-shadow: 0 12px 40px rgba(10, 37, 64, 0.25);
     border: 1px solid rgba(0, 180, 255, 0.15);
 
@@ -302,9 +296,41 @@ footer p {
     transform: translateY(-8px);
     transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
     z-index: 1100;
+
+    /* Firefox: тонкий скроллбар, изначально прозрачный */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 }
 
-/* Открываем панель при включённом чекбоксе */
+/* Firefox: скроллбар появляется при наведении */
+.menu-panel:hover {
+    scrollbar-color: #00B4FF transparent;
+}
+
+/* Chrome / Safari / Edge: скроллбар прозрачный по умолчанию */
+.menu-panel::-webkit-scrollbar {
+    width: 6px;
+}
+.menu-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.menu-panel::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.25s ease;
+}
+
+/* Chrome / Safari / Edge: показываем ползунок при наведении */
+.menu-panel:hover::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00B4FF, #00FF88);
+}
+
+/* Chrome / Safari / Edge: усиление при наведении на сам ползунок */
+.menu-panel::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00FF88, #00B4FF);
+}
+
+/* Открытие панели */
 .menu-toggle:checked ~ .menu-panel {
     opacity: 1;
     visibility: visible;
@@ -313,12 +339,27 @@ footer p {
 
 /* Заголовок панели */
 .menu-title {
+    position: sticky;
+    top: 0;
+    background: #FFFFFF;
+    z-index: 1;
+    margin: 0 0 4px;
+    padding: 14px 12px 10px;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: #718096;
-    margin: 4px 12px 8px;
     font-weight: 700;
+
+    box-shadow: 0 4px 8px -6px rgba(0, 0, 0, 0.15);
+}
+
+/* Пустой список категорий */
+.menu-empty {
+    padding: 12px;
+    color: #A0AEC0;
+    font-size: 13px;
+    text-align: center;
 }
 
 /* Пункты меню */
@@ -345,4 +386,43 @@ footer p {
     height: 1px;
     background: #E2E8F0;
     margin: 8px 12px;
+}
+
+@media (max-width: 1100px) {
+    .search-form {
+        min-width: 150px;
+    }
+    header nav {
+        gap: 10px;
+    }
+    header nav a {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 900px) {
+    header {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+    header nav {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+    .search-form {
+        order: 3;
+        flex-basis: 100%;
+        max-width: none;
+        min-width: 0;
+    }
+    main {
+        padding-top: 130px;
+    }
+    .menu-panel {
+        min-width: 100%;
+        max-width: none;
+    }
 }

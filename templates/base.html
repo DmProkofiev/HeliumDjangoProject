@@ -11,32 +11,33 @@
 <body>
     <header>
         <nav>
-
             <a href="{% url 'core:index' %}" class="logo-helium" data-text="Helium">Helium</a>
 
             <div class="menu-wrapper">
-            <input type="checkbox" id="menu-toggle" class="menu-toggle">
-            <label for="menu-toggle" class="burger-btn" aria-label="Открыть меню">
-                <span></span>
-                <span></span>
-                <span></span>
-            </label>
+                <input type="checkbox" id="menu-toggle" class="menu-toggle">
+                <label for="menu-toggle" class="burger-btn" aria-label="Открыть меню">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </label>
 
-            <div class="menu-panel">
-                <h4 class="menu-title">Категории</h4>
-                <a href="{% url 'core:publication_list' %}?category=design">Дизайн</a>
-                <a href="{% url 'core:publication_list' %}?category=dev">Программирование</a>
-                <a href="{% url 'core:publication_list' %}?category=repair">Ремонт</a>
-                <a href="{% url 'core:publication_list' %}?category=consult">Консультации</a>
-                <a href="{% url 'core:publication_list' %}?category=marketing">Маркетинг</a>
-                <a href="{% url 'core:publication_list' %}?category=copywriting">Копирайтинг</a>
+                <div class="menu-panel">
+                    <h4 class="menu-title">Категории</h4>
 
-                <div class="menu-divider"></div>
+                    {% for cat in menu_categories %}
+                        <a href="{% url 'core:publication_list' %}?category={{ cat.slug }}">
+                            {{ cat.name }}
+                        </a>
+                    {% empty %}
+                        <p class="menu-empty">Категории отсутсвуют</p>
+                    {% endfor %}
 
-                <a href="{% url 'core:publication_list' %}?type=service">Все услуги</a>
-                <a href="{% url 'core:publication_list' %}?type=order">Все заказы</a>
+                    <div class="menu-divider"></div>
+
+                    <a href="{% url 'core:publication_list' %}?type=service">Все услуги</a>
+                    <a href="{% url 'core:publication_list' %}?type=order">Все заказы</a>
+                </div>
             </div>
-        </div>
 
             <form method="get" action="{% url 'core:publication_list' %}" class="search-form">
                 <input type="text" name="q" placeholder="Найдется что угодно" class="search-input">

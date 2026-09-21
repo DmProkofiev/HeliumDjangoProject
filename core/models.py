@@ -39,72 +39,26 @@ class Category(models.Model):
 
 
 class Publication(models.Model):
-    # Тип публикации: услуга (исполнитель предлагает) или заказ (заказчик ищет)
-    TYPE_CHOICES = (
-        ('service', 'Услуга'),
-        ('order', 'Заказ'),
-    )
 
-    STATUS_CHOICES = (
-        ('active', 'Активна'),
-        ('in_progress', 'В работе'),
-        ('closed', 'Закрыта'),
-        ('archived', 'Архивирована'),
-    )
+    TYPE_CHOICES = (('service', 'Услуга'), ('order', 'Заказ'))
+    STATUS_CHOICES = (('active', 'Активна'), ('in_progress', 'В работе'), ('closed', 'Закрыта'), ('archived', 'Архивирована'))
+    PRICE_TYPE_CHOICES = (('fixed', 'Фиксированная'), ('hourly', 'Почасовая'), ('negotiable', 'Договорная'))
 
-    PRICE_TYPE_CHOICES = (
-        ('fixed', 'Фиксированная'),
-        ('hourly', 'Почасовая'),
-        ('negotiable', 'Договорная'),
-    )
-
-    # Тип и статус
     publication_type = models.CharField(
-        'Тип публикации',
-        max_length=10,
-        choices=TYPE_CHOICES,
-        default='service',
-    )
-    status = models.CharField(
-        'Статус',
-        max_length=15,
-        choices=STATUS_CHOICES,
-        default='active',
-    )
+        'Тип публикации', max_length=10,choices=TYPE_CHOICES, default='service')
+    status = models.CharField('Статус', max_length=15, choices=STATUS_CHOICES, default='active')
 
     # Связи
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='publications',
-        verbose_name='Автор',
-    )
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='publications',
-        verbose_name='Категория',
-    )
-    tags = models.ManyToManyField(
-        Tag,
-        blank=True,
-        related_name='publications',
-        verbose_name='Теги',
-    )
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='publications', verbose_name='Автор')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='publications', verbose_name='Категория')
+    tags = models.ManyToManyField(Tag, blank=True, related_name='publications', verbose_name='Теги')
 
     # Основные поля
     title = models.CharField('Заголовок', max_length=200)
     slug = models.SlugField('Слаг', max_length=220, unique=True, blank=True)
     description = models.TextField('Описание')
     price = models.DecimalField('Цена', max_digits=10, decimal_places=2, null=True, blank=True)
-    price_type = models.CharField(
-        'Тип цены',
-        max_length=10,
-        choices=PRICE_TYPE_CHOICES,
-        default='fixed',
-    )
+    price_type = models.CharField('Тип цены',max_length=10,choices=PRICE_TYPE_CHOICES,default='fixed')
     deadline = models.DateField('Срок выполнения', null=True, blank=True)
     image = models.ImageField('Изображение', upload_to='publications/', blank=True, null=True)
 
