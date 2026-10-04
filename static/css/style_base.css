@@ -381,6 +381,117 @@ footer p {
     padding-left: 18px;
 }
 
+.account-box {
+    max-width: 480px;
+    margin: 40px auto;
+    background: #FFFFFF;
+    border-radius: 14px;
+    padding: 32px 28px;
+    box-shadow: 0 12px 40px rgba(10, 37, 64, 0.08);
+    border: 1px solid rgba(0, 180, 255, 0.12);
+}
+
+.account-box h1 {
+    font-size: 24px;
+    margin-bottom: 24px;
+    color: #1A202C;
+}
+
+.content-form .form-group {
+    margin-bottom: 16px;
+}
+
+.content-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #4A5568;
+    font-weight: 600;
+}
+
+.content-form .form-control,
+.content-form input[type="text"],
+.content-form input[type="email"],
+.content-form input[type="password"],
+.content-form input[type="file"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1A202C;
+    background: #FFFFFF;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    outline: none;
+}
+
+.content-form .form-control:focus,
+.content-form input:focus {
+    border-color: #00FF88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.35);
+}
+
+.content-form .error {
+    margin-top: 6px;
+    color: #C62828;
+    font-size: 13px;
+    background: rgba(229, 57, 53, 0.08);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #E53935;
+}
+
+.content-form .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-right: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #00B4FF, #00FF88);
+    color: #0A2540;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.55);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #4A5568;
+    border: 1px solid #E2E8F0;
+}
+
+.btn-secondary:hover {
+    background: #F0F4F8;
+    color: #1A202C;
+}
+
+.text-center {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #4A5568;
+}
+
+.text-center a {
+    color: #0077B6;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.text-center a:hover {
+    text-decoration: underline;
+}
+
 /* Разделитель */
 .menu-divider {
     height: 1px;

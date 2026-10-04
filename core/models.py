@@ -37,15 +37,21 @@ class Category(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
-
 class Publication(models.Model):
+    TYPE_CHOICES = (('service', 'Услуга'), ('Item', 'Товар'))
+    STATUS_CHOICES = (
+        ('active', 'Активна'),
+        ('in_progress', 'В работе'),
+        ('closed', 'Закрыта'),
+        ('archived', 'Архивирована')
+    )
+    PRICE_TYPE_CHOICES = (
+        ('fixed', 'Фиксированная'),
+        ('hourly', 'Почасовая'),
+        ('negotiable', 'Договорная')
+    )
 
-    TYPE_CHOICES = (('service', 'Услуга'), ('order', 'Заказ'))
-    STATUS_CHOICES = (('active', 'Активна'), ('in_progress', 'В работе'), ('closed', 'Закрыта'), ('archived', 'Архивирована'))
-    PRICE_TYPE_CHOICES = (('fixed', 'Фиксированная'), ('hourly', 'Почасовая'), ('negotiable', 'Договорная'))
-
-    publication_type = models.CharField(
-        'Тип публикации', max_length=10,choices=TYPE_CHOICES, default='service')
+    publication_type = models.CharField('Тип публикации', max_length=10,choices=TYPE_CHOICES, default='service')
     status = models.CharField('Статус', max_length=15, choices=STATUS_CHOICES, default='active')
 
     # Связи
@@ -64,6 +70,7 @@ class Publication(models.Model):
 
     # Метаданные
     views = models.PositiveIntegerField('Просмотры', default=0)
+    likes = models.PositiveIntegerField('Лайков', default=0)
     created_at = models.DateTimeField('Создано', auto_now_add=True)
     updated_at = models.DateTimeField('Обновлено', auto_now=True)
 
@@ -71,10 +78,7 @@ class Publication(models.Model):
         ordering = ['-created_at']
         verbose_name = 'публикация'
         verbose_name_plural = 'публикации'
-        indexes = [
-            models.Index(fields=['publication_type', 'status']),
-            models.Index(fields=['-created_at']),
-        ]
+        indexes = [models.Index(fields=['publication_type', 'status']), models.Index(fields=['-created_at'])]
 
     def __str__(self):
         return f'[{self.get_publication_type_display()}] {self.title}'

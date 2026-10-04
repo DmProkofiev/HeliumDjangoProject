@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_orders.css' %}">
+{% endblock %}
+
+{% block title %}Мои заказы — Helium{% endblock %}
+
+{% block content %}
+<section class="orders-page">
+
+    <h1>Мои заказы</h1>
+
+    <h2>Как заказчик</h2>
+    {% if as_customer %}
+        <ul class="order-list">
+            {% for order in as_customer %}
+                <li class="order-item">
+                    <a href="{% url 'orders:detail' order.id %}">
+                        <span class="order-title">{{ order.title }}</span>
+                        <span class="order-amount">{{ order.amount|floatformat:0 }} ₽</span>
+                        <span class="order-status status-{{ order.status }}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="orders-empty">
+            У вас пока нет заказов как заказчика
+        </div>
+    {% endif %}
+    <h2>Как исполнитель</h2>
+    {% if as_executor %}
+        <ul class="order-list">
+            {% for order in as_executor %}
+                <li class="order-item">
+                    <a href="{% url 'orders:detail' order.id %}">
+                        <span class="order-title">{{ order.title }}</span>
+                        <span class="order-amount">{{ order.amount|floatformat:0 }} ₽</span>
+                        <span class="order-status status-{{ order.status }}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="orders-empty">
+            У вас пока нет заказов как исполнителя
+        </div>
+    {% endif %}
+
+</section>
+{% endblock %}

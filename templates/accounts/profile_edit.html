@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_account.css' %}">
+{% endblock %}
+
+{% block title %}Редактирование профиля Helium{% endblock %}
+
+{% block content %}
+<section class="account-box">
+    <h1>Редактирование профиля</h1>
+
+    <form method="post" enctype="multipart/form-data" class="content-form">
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <div class="error">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a class="btn btn-secondary" href="{% url 'accounts:account_detail' %}">Отмена</a>
+    </form>
+</section>
+{% endblock %}

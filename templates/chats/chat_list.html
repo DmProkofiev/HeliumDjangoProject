@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_chat.css' %}">
+{% endblock %}
+
+{% block title %}Мои диалоги — Helium{% endblock %}
+
+{% block content %}
+<section class="chats-page">
+
+    <div class="chats-header">
+        <h1>Мои диалоги</h1>
+        <span class="chats-count">{{ chats_data|length }}</span>
+    </div>
+
+    {% if chats_data %}
+        <ul class="chat-list">
+            {% for item in chats_data %}
+                <li class="chat-item {% if item.unread %}chat-item-unread{% endif %}">
+                    <a href="{% url 'chats:chat_detail' item.chat.id %}" class="chat-link">
+
+                        <div class="chat-avatar">
+                            {% if item.other.avatar %}
+                                <img src="{{ item.other.avatar.url }}" alt="{{ item.other.username }}">
+                            {% else %}
+                                <span class="avatar-letter">{{ item.other.username|first|upper }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="chat-body">
+                            <div class="chat-top">
+                                <span class="chat-name">{{ item.other.username }}</span>
+                                {% if item.last_message %}
+                                    <span class="chat-time">
+                                        {{ item.last_message.created_at|date:"d.m H:i" }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            {% if item.chat.publication %}
+                                <div class="chat-publication">
+                                    По публикации: {{ item.chat.publication.title }}
+                                </div>
+                            {% endif %}
+
+                            <div class="chat-preview">
+                                {% if item.last_message %}
+                                    <span class="chat-author">{{ item.last_message.author.username }}:</span>
+                                    {{ item.last_message.text|truncatechars:60 }}
+                                {% else %}
+                                    <span class="chat-empty">Нет сообщений</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if item.unread %}
+                            <span class="chat-badge">{{ item.unread }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="chats-empty">
+            <p>У вас пока нет диалогов.</p>
+            <p class="chats-empty-hint">
+                Чат создаётся автоматически, когда вы пишете исполнителю или заказчику
+            </p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

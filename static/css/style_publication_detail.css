@@ -1,0 +1,547 @@
+
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+    color: #718096;
+    margin: 16px 0 20px;
+}
+
+.breadcrumbs a {
+    color: #0077B6;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumbs a:hover {
+    color: #00B4A6;
+}
+
+.breadcrumbs-sep {
+    color: #CBD5E0;
+}
+
+.breadcrumbs-current {
+    color: #4A5568;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+}
+
+/* ===== ОСНОВНОЙ БЛОК ===== */
+.product-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid #EDF2F7;
+    box-shadow: 0 12px 40px rgba(10, 37, 64, 0.06);
+    margin-bottom: 24px;
+}
+
+/* ===== ГАЛЕРЕЯ ===== */
+.product-detail-gallery {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #F7FAFC;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-detail-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.product-detail-placeholder {
+    font-size: 140px;
+    font-weight: 900;
+    color: rgba(0, 180, 255, 0.25);
+    text-transform: uppercase;
+}
+
+/* ===== ИНФОРМАЦИЯ ===== */
+.product-detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.product-detail-title {
+    font-size: 26px;
+    line-height: 1.25;
+    color: #1A202C;
+    font-weight: 700;
+}
+
+/* ===== КАТЕГОРИЯ — ГРАДИЕНТНЫЙ БЕЙДЖ ===== */
+.product-detail-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, rgba(0, 180, 255, 0.12), rgba(0, 255, 136, 0.12));
+    color: #0077B6;
+    border: 1px solid rgba(0, 180, 255, 0.25);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.25s;
+}
+
+.product-detail-category::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00B4FF, #00FF88);
+    box-shadow: 0 0 6px rgba(0, 255, 136, 0.6);
+}
+
+.product-detail-category:hover {
+    background: linear-gradient(135deg, rgba(0, 180, 255, 0.2), rgba(0, 255, 136, 0.2));
+    color: #00B4A6;
+    border-color: rgba(0, 255, 136, 0.5);
+    box-shadow: 0 0 14px rgba(0, 255, 136, 0.35);
+    transform: translateY(-1px);
+}
+
+/* ===== ЦЕНА ===== */
+.product-detail-price {
+    font-size: 34px;
+    font-weight: 800;
+    color: #1A202C;
+    line-height: 1;
+    margin: 4px 0;
+}
+
+/* ===== ТЕГИ ===== */
+.product-detail-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 8px;
+}
+
+.product-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    cursor: default;
+    transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.product-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(10, 37, 64, 0.1);
+}
+
+/* Цвета тегов */
+.tag-color-0 {
+    background: rgba(0, 180, 255, 0.12);
+    color: #0077B6;
+    border-color: rgba(0, 180, 255, 0.35);
+}
+
+.tag-color-1 {
+    background: rgba(0, 255, 136, 0.12);
+    color: #00824A;
+    border-color: rgba(0, 255, 136, 0.45);
+}
+
+.tag-color-2 {
+    background: rgba(229, 57, 53, 0.1);
+    color: #C62828;
+    border-color: rgba(229, 57, 53, 0.3);
+}
+
+.tag-color-3 {
+    background: rgba(155, 81, 224, 0.12);
+    color: #6B2FB5;
+    border-color: rgba(155, 81, 224, 0.35);
+}
+
+.tag-color-4 {
+    background: rgba(255, 152, 0, 0.14);
+    color: #B26A00;
+    border-color: rgba(255, 152, 0, 0.4);
+}
+
+.tag-color-5 {
+    background: rgba(233, 30, 99, 0.12);
+    color: #AD1457;
+    border-color: rgba(233, 30, 99, 0.35);
+}
+
+/* ===== МЕТАДАННЫЕ ===== */
+.product-detail-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    padding: 4px 0;
+}
+
+.meta-label {
+    color: #A0AEC0;
+    min-width: 110px;
+}
+
+.meta-value {
+    color: #2D3748;
+    font-weight: 600;
+}
+
+/* ===== ДЕЙСТВИЯ ===== */
+.product-detail-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+.action-form {
+    margin: 0;
+    display: flex;
+}
+
+.action-form-grow {
+    flex: 1;
+}
+
+/* ===== БАЗА КНОПОК ===== */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.action-btn:active {
+    transform: scale(0.97);
+}
+
+/* ===== ЛАЙК ===== */
+.like-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 18px;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #4A5568;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    min-width: 80px;
+    transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.like-button:hover {
+    border-color: #E53935;
+    color: #E53935;
+}
+
+.like-button:active {
+    transform: scale(0.97);
+}
+
+.like-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    transition: fill 0.2s, stroke 0.2s;
+    flex-shrink: 0;
+}
+
+.like-count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    min-width: 12px;
+    text-align: center;
+}
+
+/* Активный лайк */
+.like-button.is-liked {
+    background: #FFF5F5;
+    border-color: #E53935;
+    color: #E53935;
+    box-shadow: 0 0 14px rgba(229, 57, 53, 0.25);
+}
+
+.like-button.is-liked .like-icon {
+    fill: #E53935;
+    stroke: #E53935;
+}
+
+.like-button.is-liked:hover {
+    background: #FFEBEE;
+}
+
+/* ===== КОРЗИНА ===== */
+.cart-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #00B4FF, #00FF88);
+    color: #0A2540;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.15s, background 0.2s, color 0.2s;
+}
+
+.cart-button:hover {
+    box-shadow: 0 8px 22px rgba(0, 255, 136, 0.45);
+}
+
+.cart-button:active {
+    transform: scale(0.97);
+}
+
+.cart-button.is-active {
+    background: #FFFFFF;
+    color: #0A2540;
+    border: 1px solid #00FF88;
+    box-shadow: 0 0 14px rgba(0, 255, 136, 0.3);
+}
+
+/* Иконка корзины */
+.cart-icon {
+    position: relative;
+    display: inline-block;
+    width: 15px;
+    height: 13px;
+    border: 2px solid currentColor;
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+    flex-shrink: 0;
+}
+
+.cart-icon::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -5px;
+    width: 4px;
+    height: 3px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+.cart-icon::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: -8px;
+    width: 13px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+/* ===== КНОПКА «НАПИСАТЬ АВТОРУ» ===== */
+.btn-write {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 22px;
+    border-radius: 10px;
+    background: transparent;
+    border: 2px solid #00B4FF;
+    color: #0077B6;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.25s;
+}
+
+.btn-write:hover {
+    border-color: #00FF88;
+    color: #00B4A6;
+    background: rgba(0, 180, 255, 0.06);
+    box-shadow: 0 0 16px rgba(0, 255, 136, 0.35);
+}
+
+/* ===== ОПИСАНИЕ ===== */
+.product-detail-description {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid #EDF2F7;
+    box-shadow: 0 12px 40px rgba(10, 37, 64, 0.06);
+    margin-bottom: 24px;
+}
+
+.product-detail-description h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A202C;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #EDF2F7;
+}
+
+.description-body {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #2D3748;
+}
+
+.description-body p {
+    margin-bottom: 12px;
+}
+
+.description-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================================
+   АДАПТИВ
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .product-detail {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .product-detail-gallery {
+        aspect-ratio: 4 / 3;
+    }
+
+    .product-detail-placeholder {
+        font-size: 100px;
+    }
+
+    .product-detail-title {
+        font-size: 22px;
+    }
+
+    .product-detail-price {
+        font-size: 28px;
+    }
+
+    .product-detail-description {
+        padding: 20px;
+    }
+
+    .breadcrumbs-current {
+        max-width: 220px;
+    }
+}
+
+@media (max-width: 600px) {
+    .product-detail {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .product-detail-title {
+        font-size: 19px;
+    }
+
+    .product-detail-price {
+        font-size: 24px;
+    }
+
+    .product-detail-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-form,
+    .action-form-grow {
+        width: 100%;
+    }
+
+    .action-btn,
+    .btn-write,
+    .like-button,
+    .cart-button {
+        width: 100%;
+        padding: 11px 16px;
+    }
+
+    .meta-label {
+        min-width: 90px;
+        font-size: 13px;
+    }
+
+    .meta-value {
+        font-size: 13.5px;
+    }
+
+    .product-tag {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+
+    .product-detail-category {
+        font-size: 12px;
+        padding: 5px 12px;
+    }
+
+    .product-detail-description h2 {
+        font-size: 17px;
+    }
+
+    .description-body {
+        font-size: 14px;
+    }
+
+    .breadcrumbs {
+        font-size: 12px;
+    }
+
+    .breadcrumbs-current {
+        max-width: 140px;
+    }
+}

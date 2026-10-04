@@ -11,8 +11,7 @@
 <body>
     <header>
         <nav>
-            <a href="{% url 'core:index' %}" class="logo-helium" data-text="Helium">Helium</a>
-
+            <a href="{% url 'core:feed' %}" class="logo-helium" data-text="Helium">Helium</a>
             <div class="menu-wrapper">
                 <input type="checkbox" id="menu-toggle" class="menu-toggle">
                 <label for="menu-toggle" class="burger-btn" aria-label="Открыть меню">
@@ -20,10 +19,8 @@
                     <span></span>
                     <span></span>
                 </label>
-
                 <div class="menu-panel">
                     <h4 class="menu-title">Категории</h4>
-
                     {% for cat in menu_categories %}
                         <a href="{% url 'core:publication_list' %}?category={{ cat.slug }}">
                             {{ cat.name }}
@@ -31,11 +28,7 @@
                     {% empty %}
                         <p class="menu-empty">Категории отсутсвуют</p>
                     {% endfor %}
-
                     <div class="menu-divider"></div>
-
-                    <a href="{% url 'core:publication_list' %}?type=service">Все услуги</a>
-                    <a href="{% url 'core:publication_list' %}?type=order">Все заказы</a>
                 </div>
             </div>
 
@@ -47,14 +40,17 @@
             </form>
 
             {% if user.is_authenticated %}
-                <a href="{% url 'chats:list' %}">Чаты</a>
-                <span>{{ user.username }}</span>
-                <div class="avatar-header">
-                    {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}" alt="Аватар пользователя" class="avatar">
-                    {% endif %}
-                </div>
-                <a href="{% url 'accounts:profile' %}">Мой профиль</a>
+                <a href="{% url 'chats:list' %}">Сообщения</a>
+                <a href="{% url 'accounts:account_detail' %}">
+                    <span>
+                        {{ user.username }}
+                    </span>
+                    <div class="avatar-header">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="Аватар пользователя" class="avatar">
+                        {% endif %}
+                    </div>
+                </a>
                 <a href="{% url 'accounts:logout' %}">Выйти</a>
             {% else %}
                 <a href="{% url 'accounts:login' %}">Войти</a>

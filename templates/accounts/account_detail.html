@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_account.css' %}">
+{% endblock %}
+
+{% block title %}Мой профиль — Helium{% endblock %}
+
+{% block content %}
+<section class="account-layout">
+
+    <!-- ===== САЙДБАР ===== -->
+    <aside class="account-sidebar">
+        <div class="sidebar-user">
+            <div class="sidebar-avatar">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Аватар">
+                {% else %}
+                    <span class="avatar-letter">{{ user.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="sidebar-name">{{ user.username }}</div>
+            <div class="sidebar-city">{{ user.city|default:'Город не указан' }}</div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <button class="menu-item menu-active" data-tab="profile">
+                <span class="menu-icon icon-user"></span>
+                Профиль
+            </button>
+
+            <button class="menu-item" data-tab="publications">
+                <span class="menu-icon icon-box"></span>
+                Мои публикации
+                <span class="menu-badge">{{ my_publications|length }}</span>
+            </button>
+
+            <button class="menu-item" data-tab="favorites">
+                <span class="menu-icon icon-heart"></span>
+                Избранное
+                <span class="menu-badge">{{ favorites|length }}</span>
+            </button>
+
+            <button class="menu-item" data-tab="cart">
+                <span class="menu-icon icon-cart"></span>
+                Корзина
+                <span class="menu-badge">{{ cart_items|length }}</span>
+            </button>
+
+            <button class="menu-item" data-tab="payments">
+                <span class="menu-icon icon-card"></span>
+                Способы оплаты
+                <span class="menu-badge">{{ payment_methods|length }}</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-actions">
+            <a href="{% url 'accounts:profile_edit' %}" class="sidebar-link">
+                Редактировать профиль
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="sidebar-link sidebar-link-danger">
+                Выйти
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===== КОНТЕНТНАЯ ОБЛАСТЬ ===== -->
+    <div class="account-content">
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- ПРОФИЛЬ -->
+        <div class="content-panel content-active" id="panel-profile">
+            <h1 class="content-title">Профиль</h1>
+
+            <div class="info-list">
+                <div class="info-row">
+                    <span class="info-label">Имя пользователя</span>
+                    <span class="info-value">{{ user.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ user.email }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Телефон</span>
+                    <span class="info-value">{{ user.phone|default:'—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Город</span>
+                    <span class="info-value">{{ user.city|default:'—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Роль</span>
+                    <span class="info-value">{{ user.get_role_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Дата регистрации</span>
+                    <span class="info-value">{{ user.date_joined|date:"d.m.Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- МОИ ПУБЛИКАЦИИ -->
+        <div class="content-panel" id="panel-publications">
+            <h1 class="content-title">
+                Мои публикации
+                <span class="title-count">{{ my_publications|length }}</span>
+            </h1>
+
+            {% if my_publications %}
+                <div class="publication-grid">
+                    {% for pub in my_publications %}
+                        <article class="publication-card">
+                            <a href="{% url 'core:publication_detail' pub.slug %}" class="publication-link">
+                                <div class="publication-image-wrap">
+                                    {% if pub.image %}
+                                        <img src="{{ pub.image.url }}" alt="{{ pub.title }}" class="publication-image">
+                                    {% else %}
+                                        <div class="publication-placeholder">{{ pub.title|first|upper }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="publication-info">
+                                    <p class="publication-price">{{ pub.price|floatformat:0 }} ₽</p>
+                                    <h3 class="publication-title">{{ pub.title }}</h3>
+                                </div>
+                            </a>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="content-empty">
+                    <p>У вас пока нет публикаций</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ИЗБРАННОЕ -->
+        <div class="content-panel" id="panel-favorites">
+            <h1 class="content-title">
+                Избранное
+                <span class="title-count">{{ favorites|length }}</span>
+            </h1>
+
+            {% if favorites %}
+                <div class="publication-grid">
+                    {% for fav in favorites %}
+                        <article class="publication-card">
+                            <a href="{% url 'core:publication_detail' fav.publication.slug %}" class="publication-link">
+                                <div class="publication-image-wrap">
+                                    {% if fav.publication.image %}
+                                        <img src="{{ fav.publication.image.url }}" alt="{{ fav.publication.title }}" class="publication-image">
+                                    {% else %}
+                                        <div class="publication-placeholder">{{ fav.publication.title|first|upper }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="publication-info">
+                                    <p class="publication-price">{{ fav.publication.price|floatformat:0 }} ₽</p>
+                                    <h3 class="publication-title">{{ fav.publication.title }}</h3>
+                                </div>
+                            </a>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="content-empty">
+                    <p>В избранном пока ничего нет</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- КОРЗИНА -->
+        <div class="content-panel" id="panel-cart">
+            <h1 class="content-title">
+                Корзина
+                <span class="title-count">{{ cart_items|length }}</span>
+            </h1>
+
+            {% if cart_items %}
+                <div class="publication-grid">
+                    {% for item in cart_items %}
+                        <article class="publication-card">
+                            <a href="{% url 'core:publication_detail' item.publication.slug %}" class="publication-link">
+                                <div class="publication-image-wrap">
+                                    {% if item.publication.image %}
+                                        <img src="{{ item.publication.image.url }}" alt="{{ item.publication.title }}" class="publication-image">
+                                    {% else %}
+                                        <div class="publication-placeholder">{{ item.publication.title|first|upper }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="publication-info">
+                                    <p class="publication-price">{{ item.publication.price|floatformat:0 }} ₽</p>
+                                    <h3 class="publication-title">{{ item.publication.title }}</h3>
+                                </div>
+                            </a>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="content-empty">
+                    <p>Корзина пуста.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- СПОСОБЫ ОПЛАТЫ -->
+        <div class="content-panel" id="panel-payments">
+            <h1 class="content-title">
+                Способы оплаты
+                <span class="title-count">{{ payment_methods|length }}</span>
+            </h1>
+
+            {% if payment_methods %}
+                <div class="payment-methods-list">
+                    {% for method in payment_methods %}
+                        <div class="payment-method-card {% if method.is_default %}is-default{% endif %}">
+                            <div class="pm-info">
+                                <div class="pm-title">
+                                    {{ method.title|default:'Банковская карта' }}
+                                    {% if method.is_default %}
+                                        <span class="pm-badge">Основная</span>
+                                    {% endif %}
+                                </div>
+                                <div class="pm-card">
+                                    {{ method.card_type|default:'Карта' }} •••• {{ method.card_last4 }}
+                                </div>
+                            </div>
+
+                            <div class="pm-actions">
+                                {% if not method.is_default %}
+                                    <form method="post"
+                                          action="{% url 'accounts:payment_method_default' method.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="pm-btn">Сделать основной</button>
+                                    </form>
+                                {% endif %}
+
+                                <form method="post"
+                                      action="{% url 'accounts:payment_method_remove' method.id %}"
+                                      onsubmit="return confirm('Удалить эту карту?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="pm-btn pm-btn-danger">Удалить</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="content-empty">
+                    <p>У вас нет сохранённых способов оплаты</p>
+                    <p style="color: #A0AEC0; font-size: 13px; margin-top: 8px;">
+                        Карта сохранится автоматически после первой оплаты заказа.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</section>
+
+<script>
+(function () {
+    const items = document.querySelectorAll('.menu-item');
+    const panels = document.querySelectorAll('.content-panel');
+
+    items.forEach(btn => {
+        btn.addEventListener('click', () => {
+            items.forEach(b => b.classList.remove('menu-active'));
+            panels.forEach(p => p.classList.remove('content-active'));
+
+            btn.classList.add('menu-active');
+            const panel = document.getElementById('panel-' + btn.dataset.tab);
+            if (panel) panel.classList.add('content-active');
+        });
+    });
+})();
+</script>
+{% endblock %}

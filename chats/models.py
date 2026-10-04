@@ -2,9 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
-
 class Chat(models.Model):
-
     user1 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chats_as_user1', verbose_name='Участник 1',)
     user2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chats_as_user2', verbose_name='Участник 2',)
     publication = models.ForeignKey('core.Publication', on_delete=models.SET_NULL, null=True, blank=True, related_name='chats', verbose_name='Публикация',)
@@ -17,7 +15,7 @@ class Chat(models.Model):
         ordering = ['-updated_at']
 
     def __str__(self):
-        return f'Диалог #{self.pk}: {self.user1} ↔ {self.user2}'
+        return f'Диалог {self.pk}: {self.user1} | {self.user2}'
 
     def has_participant(self, user):
         return user.is_authenticated and user.id in (self.user1_id, self.user2_id)
@@ -45,7 +43,6 @@ class Chat(models.Model):
             return chat, False
         chat = cls.objects.create(user1=u1, user2=u2, publication=publication)
         return chat, True
-
 
 class Message(models.Model):
     chat = models.ForeignKey(Chat,on_delete=models.CASCADE,related_name='messages',verbose_name='Диалог',)

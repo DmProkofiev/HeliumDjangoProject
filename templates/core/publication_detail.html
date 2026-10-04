@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ publication.title }} — Helium{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_publication_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs">
+    <a href="{% url 'core:feed' %}">Главная</a>
+    <span class="breadcrumbs-sep">/</span>
+
+    {% if publication.category %}
+        <a href="{% url 'core:publication_list' %}?category={{ publication.category.slug }}">
+            {{ publication.category.name }}
+        </a>
+        <span class="breadcrumbs-sep">/</span>
+    {% endif %}
+
+    <span class="breadcrumbs-current">{{ publication.title }}</span>
+</nav>
+
+<article class="product-detail">
+
+    <div class="product-detail-gallery">
+        {% if publication.image %}
+            <img src="{{ publication.image.url }}" alt="{{ publication.title }}" class="product-detail-image">
+        {% else %}
+            <div class="product-detail-placeholder">
+                {{ publication.title|first|upper }}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="product-detail-info">
+
+        <h1 class="product-detail-title">{{ publication.title }}</h1>
+
+        <div class="product-detail-price">
+            {{ publication.price|floatformat:0 }} ₽
+        </div>
+        {% if publication.category %}
+            <a href="{% url 'core:publication_list' %}?category={{ publication.category.slug }}"
+               class="product-detail-category">
+                {{ publication.category.name }}
+            </a>
+        {% endif %}
+        {% if publication.tags.all %}
+            <div class="product-detail-tags">
+                {% for tag in publication.tags.all %}
+                    <span class="product-tag tag-color-{% cycle '0' '1' '2' '3' '4' '5' %}">
+                        #{{ tag.name }}
+                    </span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="product-detail-meta">
+            <span class="meta-label">Автор:</span>
+            <span class="meta-value">{{ publication.author.username }}</span>
+        </div>
+
+        <div class="product-detail-meta">
+            <span class="meta-label">Опубликовано:</span>
+            <span class="meta-value">{{ publication.created_at|date:"d.m.Y" }}</span>
+        </div>
+
+        <div class="product-detail-meta">
+            <span class="meta-label">Просмотров:</span>
+            <span class="meta-value">{{ publication.views }}</span>
+        </div>
+
+        <div class="product-detail-actions">
+
+            <form method="post" action="{% url 'accounts:toggle_like' publication.id %}" class="action-form">
+                {% csrf_token %}
+                <button type="submit"
+                        class="action-btn like-button like-button-large {% if publication.id in liked_ids %}is-liked{% endif %}"
+                        aria-label="Нравится">
+                    <svg class="like-icon" viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M12 21s-7.5-4.35-10-9.5C.5 7 3 3 6.5 3c2 0 3.5 1.5 5.5 4 2-2.5 3.5-4 5.5-4C21 3 23.5 7 22 11.5 19.5 16.65 12 21 12 21z"/>
+                    </svg>
+                    <span class="like-count">{{ publication.likes }}</span>
+                </button>
+            </form>
+
+            <form method="post" action="{% url 'accounts:toggle_cart' publication.id %}" class="action-form action-form-grow">
+                {% csrf_token %}
+                <button type="submit"
+                        class="action-btn cart-button cart-button-large {% if publication.id in cart_ids %}is-active{% endif %}">
+                    <span class="cart-icon"></span>
+                    <span class="cart-label">
+                        {% if publication.id in cart_ids %}В корзине{% else %}В корзину{% endif %}
+                    </span>
+                </button>
+            </form>
+
+            {% if user.is_authenticated and user.id != publication.author_id %}
+                <form method="post" action="{% url 'chats:start_from_publication' publication.id %}" class="write-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-write">Написать</button>
+                </form>
+            {% endif %}
+
+        </div>
+    </div>
+
+</article>
+
+<section class="product-detail-description">
+    <h2>Описание</h2>
+    <div class="description-body">
+        {{ publication.description|linebreaks }}
+    </div>
+</section>
+
+{% endblock %}

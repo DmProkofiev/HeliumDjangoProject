@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_orders.css' %}">
+{% endblock %}
+
+{% block title %}{{ order.title }} — Helium{% endblock %}
+
+{% block content %}
+<section class="order-detail-page">
+
+    <!-- Заголовок -->
+    <div class="order-detail-header">
+        <h1>{{ order.title }}</h1>
+        <span class="order-status status-{{ order.status }}">
+            {{ order.get_status_display }}
+        </span>
+    </div>
+
+    <!-- Метаинформация -->
+    <div class="order-card">
+        <h2>Информация о заказе</h2>
+
+        <div class="order-meta">
+            <div class="order-meta-row">
+                <span class="order-meta-label">Сумма</span>
+                <span class="order-meta-value amount">{{ order.amount|floatformat:0 }} ₽</span>
+            </div>
+
+            {% if order.platform_fee %}
+                <div class="order-meta-row">
+                    <span class="order-meta-label">Комиссия платформы</span>
+                    <span class="order-meta-value">{{ order.platform_fee|floatformat:0 }} ₽</span>
+                </div>
+            {% endif %}
+
+            <div class="order-meta-row">
+                <span class="order-meta-label">Заказчик</span>
+                <span class="order-meta-value">{{ order.customer.username }}</span>
+            </div>
+
+            {% if order.executor %}
+                <div class="order-meta-row">
+                    <span class="order-meta-label">Исполнитель</span>
+                    <span class="order-meta-value">{{ order.executor.username }}</span>
+                </div>
+            {% endif %}
+
+            {% if order.publication %}
+                <div class="order-meta-row">
+                    <span class="order-meta-label">Публикация</span>
+                    <a href="{% url 'core:publication_detail' order.publication.slug %}"
+                       class="order-meta-value">
+                        {{ order.publication.title }}
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if order.deadline %}
+                <div class="order-meta-row">
+                    <span class="order-meta-label">Срок выполнения</span>
+                    <span class="order-meta-value">{{ order.deadline|date:"d.m.Y" }}</span>
+                </div>
+            {% endif %}
+
+            <div class="order-meta-row">
+                <span class="order-meta-label">Создан</span>
+                <span class="order-meta-value">{{ order.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% if order.description %}
+        <div class="order-card">
+            <h2>Описание</h2>
+            <div class="order-description">
+                {{ order.description|linebreaks }}
+            </div>
+        </div>
+    {% endif %}
+    <div class="order-actions">
+        {% if order.status == 'pending_payment' and request.user.id == order.customer_id %}
+            <form method="post" action="{% url 'orders:pay' order.id %}">
+                {% csrf_token %}
+                <button type="submit" class="order-btn order-btn-primary">
+                    Оплатить {{ order.amount|floatformat:0 }} ₽
+                </button>
+            </form>
+        {% endif %}
+
+        {% if order.can_be_confirmed and request.user.id == order.customer_id %}
+            <form method="post" action="{% url 'orders:confirm' order.id %}"
+                  onsubmit="return confirm('Подтвердить выполнение заказа? Средства будут переведены исполнителю');">
+                {% csrf_token %}
+                <button type="submit" class="order-btn order-btn-primary">
+                    Подтвердить выполнение
+                </button>
+            </form>
+        {% endif %}
+
+        {% if order.can_be_cancelled %}
+            <form method="post" action="{% url 'orders:cancel' order.id %}"
+                  onsubmit="return confirm('Отменить заказ? Если оплата была, средства вернутся заказчику.');">
+                {% csrf_token %}
+                <button type="submit" class="order-btn order-btn-danger">
+                    Отменить заказ
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="order-card">
+        <h2>История транзакций</h2>
+
+        {% if order.transactions.all %}
+            <div class="order-transactions">
+                {% for tx in order.transactions.all %}
+                    <div class="tx-row">
+                        <span class="tx-type">{{ tx.get_type_display }}</span>
+                        <span class="tx-amount">{{ tx.amount|floatformat:0 }} ₽</span>
+                        <span class="tx-status-{{ tx.status }}">{{ tx.get_status_display }}</span>
+                        <span class="tx-date">{{ tx.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #A0AEC0; font-size: 14px;">Транзакций пока нет</p>
+        {% endif %}
+    </div>
+
+</section>
+{% endblock %}

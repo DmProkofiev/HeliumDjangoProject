@@ -1,0 +1,542 @@
+.hero-banner {
+    position: relative;
+    background: linear-gradient(135deg, #0A2540 0%, #0077B6 45%, #00B4A6 75%, #00E676 100%);
+    border-radius: 18px;
+    padding: 48px 40px;
+    color: #FFFFFF;
+    overflow: hidden;
+    margin: 20px 0 32px;
+    box-shadow: 0 20px 50px rgba(0, 119, 182, 0.25);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 560px;
+}
+
+.hero-banner h1 {
+    font-size: 34px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+}
+
+.hero-banner p {
+    font-size: 15px;
+    opacity: 0.92;
+    margin-bottom: 22px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-hero-primary,
+.btn-hero-outline {
+    display: inline-block;
+    padding: 11px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.25s;
+}
+
+.btn-hero-primary {
+    background: #FFFFFF;
+    color: #0A2540;
+}
+
+.btn-hero-primary:hover {
+    box-shadow: 0 0 22px rgba(0, 255, 136, 0.8);
+    transform: translateY(-2px);
+}
+
+.btn-hero-outline {
+    background: transparent;
+    color: #FFFFFF;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+}
+
+.btn-hero-outline:hover {
+    border-color: #00FF88;
+    color: #00FF88;
+    box-shadow: 0 0 18px rgba(0, 255, 136, 0.5);
+}
+
+.hero-glow {
+    position: absolute;
+    right: -80px;
+    top: -80px;
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, rgba(0, 255, 136, 0.4), transparent 70%);
+    filter: blur(40px);
+    z-index: 1;
+}
+
+/* ===== ЛЕНТА ===== */
+.feed-section {
+    margin-top: 8px;
+}
+
+.feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 18px;
+}
+
+.feed-header h2 {
+    font-size: 22px;
+    color: #1A202C;
+}
+
+.feed-count {
+    font-size: 13px;
+    color: #A0AEC0;
+}
+
+/* ===== СЕТКА КАРТОЧЕК ===== */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+/* ===== КАРТОЧКА ТОВАРА ===== */
+.product-card {
+    background: #FFFFFF;
+    border: 1px solid #EDF2F7;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(10, 37, 64, 0.12),
+                0 0 20px rgba(0, 255, 136, 0.15);
+    border-color: rgba(0, 255, 136, 0.4);
+}
+
+.product-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    flex: 1;
+}
+
+/* ===== КАРТИНКА ===== */
+.product-image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #F7FAFC;
+    overflow: hidden;
+}
+
+.product-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.35s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.product-image-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 72px;
+    font-weight: 900;
+    color: rgba(0, 180, 255, 0.25);
+    text-transform: uppercase;
+}
+
+/* ===== ТЕКСТОВАЯ ЧАСТЬ ===== */
+.product-info {
+    padding: 12px 12px 6px;
+}
+
+/* Категория */
+.product-category {
+    display: inline-block;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+    background: rgba(0, 180, 255, 0.1);
+    color: #0077B6;
+    border-radius: 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.product-category:hover {
+    background: rgba(0, 255, 136, 0.15);
+    color: #00B4A6;
+}
+
+/* Цена */
+.product-price {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1A202C;
+    margin-bottom: 6px;
+}
+
+/* Заголовок */
+.product-title {
+    font-size: 13.5px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: #1A202C;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 36px;
+    margin-bottom: 8px;
+}
+
+/* ===== ТЕГИ ===== */
+.product-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+.product-tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition: transform 0.15s;
+}
+
+.product-tag:hover {
+    transform: translateY(-1px);
+}
+
+/* Цветовые варианты тегов */
+.tag-color-0 {
+    background: rgba(0, 180, 255, 0.12);
+    color: #0077B6;
+    border-color: rgba(0, 180, 255, 0.3);
+}
+
+.tag-color-1 {
+    background: rgba(0, 255, 136, 0.12);
+    color: #00824A;
+    border-color: rgba(0, 255, 136, 0.4);
+}
+
+.tag-color-2 {
+    background: rgba(229, 57, 53, 0.1);
+    color: #C62828;
+    border-color: rgba(229, 57, 53, 0.25);
+}
+
+.tag-color-3 {
+    background: rgba(155, 81, 224, 0.12);
+    color: #6B2FB5;
+    border-color: rgba(155, 81, 224, 0.3);
+}
+
+.tag-color-4 {
+    background: rgba(255, 152, 0, 0.14);
+    color: #B26A00;
+    border-color: rgba(255, 152, 0, 0.35);
+}
+
+.tag-color-5 {
+    background: rgba(233, 30, 99, 0.12);
+    color: #AD1457;
+    border-color: rgba(233, 30, 99, 0.3);
+}
+
+/* ===== БЛОК С КНОПКАМИ ===== */
+.product-actions {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px 12px;
+    align-items: stretch;
+    margin-top: auto;
+}
+
+.action-form {
+    margin: 0;
+    display: flex;
+}
+
+.action-form-grow {
+    flex: 1;
+}
+
+/* ===== ОБЩАЯ БАЗА КНОПОК ===== */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.action-btn:active {
+    transform: scale(0.97);
+}
+
+/* ===== КНОПКА-ЛАЙК ===== */
+.like-button {
+    background: #FFFFFF;
+    color: #4A5568;
+    border: 1px solid #E2E8F0;
+    min-width: 56px;
+    padding: 10px 12px;
+}
+
+.like-button:hover {
+    border-color: #E53935;
+    color: #E53935;
+}
+
+.like-icon {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    transition: fill 0.2s, stroke 0.2s;
+    flex-shrink: 0;
+}
+
+.like-count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    min-width: 10px;
+    text-align: center;
+}
+
+.like-button.is-liked {
+    background: #FFF5F5;
+    border-color: #E53935;
+    color: #E53935;
+    box-shadow: 0 0 12px rgba(229, 57, 53, 0.25);
+}
+
+.like-button.is-liked .like-icon {
+    fill: #E53935;
+    stroke: #E53935;
+}
+
+.like-button.is-liked:hover {
+    background: #FFEBEE;
+}
+
+/* ===== КНОПКА-КОРЗИНА ===== */
+.cart-button {
+    width: 100%;
+    background: linear-gradient(135deg, #00B4FF, #00FF88);
+    color: #0A2540;
+    padding: 10px 12px;
+}
+
+.cart-button:hover {
+    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.45);
+}
+
+.cart-button.is-active {
+    background: #FFFFFF;
+    color: #0A2540;
+    border: 1px solid #00FF88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+}
+
+/* Иконка корзины */
+.cart-icon {
+    position: relative;
+    display: inline-block;
+    width: 14px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+    flex-shrink: 0;
+}
+
+.cart-icon::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -5px;
+    width: 4px;
+    height: 3px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+.cart-icon::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: -8px;
+    width: 12px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+/* ===== ПУСТАЯ ЛЕНТА ===== */
+.feed-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #A0AEC0;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px dashed #E2E8F0;
+    font-size: 15px;
+}
+
+/* ===== ПАГИНАЦИЯ ===== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0 8px;
+    font-size: 14px;
+    color: #4A5568;
+}
+
+.pagination a {
+    color: #0077B6;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    transition: all 0.2s;
+}
+
+.pagination a:hover {
+    background: linear-gradient(135deg, #00B4FF, #00FF88);
+    color: #0A2540;
+    border-color: transparent;
+    box-shadow: 0 6px 18px rgba(0, 255, 136, 0.35);
+}
+
+/* ============================================================
+   АДАПТИВ
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 14px;
+    }
+}
+
+@media (max-width: 700px) {
+    .hero-banner {
+        padding: 32px 20px;
+        border-radius: 14px;
+        margin: 12px 0 24px;
+    }
+
+    .hero-banner h1 {
+        font-size: 24px;
+    }
+
+    .hero-banner p {
+        font-size: 14px;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .product-info {
+        padding: 10px 10px 4px;
+    }
+
+    .product-price {
+        font-size: 16px;
+    }
+
+    .product-title {
+        font-size: 13px;
+        min-height: 34px;
+        margin-bottom: 6px;
+    }
+
+    .product-tag {
+        font-size: 10.5px;
+        padding: 2px 7px;
+    }
+
+    .product-category {
+        font-size: 10.5px;
+        padding: 2px 8px;
+    }
+
+    .product-actions {
+        gap: 6px;
+        padding: 6px 10px 10px;
+    }
+
+    .action-btn {
+        font-size: 12.5px;
+        padding: 9px 10px;
+    }
+
+    .like-button {
+        min-width: 48px;
+        padding: 9px 10px;
+    }
+
+    .product-image-placeholder {
+        font-size: 54px;
+    }
+}
+
+@media (max-width: 420px) {
+    .product-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cart-label {
+        display: none;
+    }
+
+    .cart-button {
+        padding: 9px 8px;
+    }
+}

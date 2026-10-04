@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_chat.css' %}">
+{% endblock %}
+
+{% block title %}Чат с {{ other_user.username }} — Helium{% endblock %}
+
+{% block content %}
+<section class="chat-detail"
+         data-chat-id="{{ chat.id }}"
+         data-user-id="{{ request.user.id }}">
+
+    <!-- ШАПКА ДИАЛОГА -->
+    <div class="chat-detail-header">
+        <a href="{% url 'chats:list' %}" class="chat-back">← К списку</a>
+
+        <div class="chat-detail-user">
+            <div class="chat-avatar-small">
+                {% if other_user.avatar %}
+                    <img src="{{ other_user.avatar.url }}" alt="{{ other_user.username }}">
+                {% else %}
+                    <span class="avatar-letter">{{ other_user.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            <span>{{ other_user.username }}</span>
+        </div>
+
+        {% if chat.publication %}
+            <a href="{% url 'core:publication_detail' chat.publication.slug %}"
+               class="chat-detail-publication">
+                {{ chat.publication.title }}
+            </a>
+        {% endif %}
+
+        <form method="post" action="{% url 'chats:remove_chat' chat.id %}"
+              onsubmit="return confirm('Удалить чат со всеми сообщениями?');"
+              class="chat-delete-form">
+            {% csrf_token %}
+            <button type="submit" class="chat-delete-btn">Удалить чат</button>
+        </form>
+    </div>
+
+    <!-- СООБЩЕНИЯ -->
+    <div id="messages" class="chat-messages">
+        {% for message in messages %}
+            <div class="message {% if message.author_id == request.user.id %}message-own{% else %}message-other{% endif %}"
+                 data-message-id="{{ message.id }}">
+                <div class="message-bubble">
+                    {% if message.author_id != request.user.id %}
+                        <span class="message-author">{{ message.author.username }}</span>
+                    {% endif %}
+                    <span class="message-text">{{ message.text }}</span>
+                    <span class="message-time">{{ message.created_at|date:"d.m H:i" }}</span>
+                </div>
+            </div>
+        {% empty %}
+            <div class="messages-empty">Начните общение — отправьте первое сообщение.</div>
+        {% endfor %}
+    </div>
+
+    <!-- ФОРМА ОТПРАВКИ -->
+    <form id="send-form" class="chat-send-form" autocomplete="off">
+        {% csrf_token %}
+        <textarea id="message-input"
+                  rows="1"
+                  placeholder="Введите сообщение..."
+                  maxlength="2000"></textarea>
+        <button type="submit" class="chat-send-btn" aria-label="Отправить">
+            <span class="icon-send"></span>
+        </button>
+    </form>
+
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const root = document.querySelector('.chat-detail');
+    const chatId = root.dataset.chatId;
+    const currentUserId = parseInt(root.dataset.userId, 10);
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('message-input');
+    const form = document.getElementById('send-form');
+
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/chat/${chatId}/`);
+
+    function scrollToBottom() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function appendMessage(data) {
+        const empty = messagesDiv.querySelector('.messages-empty');
+        if (empty) empty.remove();
+
+        const isOwn = parseInt(data.author_id, 10) === currentUserId;
+        const el = document.createElement('div');
+        el.className = 'message ' + (isOwn ? 'message-own' : 'message-other');
+        el.dataset.messageId = data.message_id;
+
+        const authorHtml = isOwn
+            ? ''
+            : `<span class="message-author">${escapeHtml(data.author)}</span>`;
+
+        const date = new Date(data.created_at);
+        const time = date.toLocaleString('ru-RU', {
+            day: '2-digit', month: '2-digit',
+            hour: '2-digit', minute: '2-digit',
+        });
+
+        el.innerHTML = `
+            <div class="message-bubble">
+                ${authorHtml}
+                <span class="message-text">${escapeHtml(data.text)}</span>
+                <span class="message-time">${time}</span>
+            </div>
+        `;
+        messagesDiv.appendChild(el);
+        scrollToBottom();
+    }
+
+    socket.onopen = () => console.log('WebSocket открыт');
+    socket.onmessage = (e) => {
+        try { appendMessage(JSON.parse(e.data)); } catch (err) { console.error(err); }
+    };
+    socket.onerror = (e) => console.error('WebSocket ошибка', e);
+    socket.onclose = () => console.warn('WebSocket закрыт');
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        if (socket.readyState !== WebSocket.OPEN) {
+            alert('Соединение потеряно. Обновите страницу.');
+            return;
+        }
+        socket.send(JSON.stringify({ text: text }));
+        input.value = '';
+        input.style.height = 'auto';
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    input.addEventListener('input', () => {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    });
+
+    scrollToBottom();
+})();
+</script>
+{% endblock %}

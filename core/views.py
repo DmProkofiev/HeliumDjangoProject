@@ -1,13 +1,15 @@
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.shortcuts import render
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.http import require_POST
+from accounts.models import Favorite, Cart
 from core.models import Publication, Category, Tag
 
-def index_view(request):
+def feed_view(request):
     publication_type = request.GET.get('type', 'service')
-
-    publications = Publication.objects.filter(publication_type=publication_type,status='active',).select_related('author', 'category').prefetch_related('tags')
-
+    publications = Publication.objects.filter(status='active').select_related('author', 'category').prefetch_related('tags')
     # Поиск
     query = request.GET.get('q')
     if query:
@@ -44,9 +46,16 @@ def index_view(request):
             recommendations = get_recommendations_for_user(request.user, limit=6)
         except ImportError:
             pass
-
-    context = {
-        'publications': page_obj,
+    liked_ids = set()
+    cart_ids = set()
+    if request.user.is_authenticated:
+        liked_ids = set(
+            Favorite.objects.filter(user=request.user).values_list('publication_id', flat=True)
+        )
+        cart_ids = set(
+            Cart.objects.filter(user=request.user).values_list('publication_id', flat=True)
+        )
+    return render(request, 'core/feed.html', {
         'page_obj': page_obj,
         'is_paginated': page_obj.has_other_pages(),
         'categories': Category.objects.all(),
@@ -57,13 +66,20 @@ def index_view(request):
         'selected_sort': sort,
         'price_min': price_min,
         'price_max': price_max,
-        'publication_type': publication_type,
-        'recommendations': recommendations,
-    }
-    return render(request, 'core/index.html', context)
+        'liked_ids': liked_ids,
+        'cart_ids': cart_ids,
+    })
 
-def publication_detail_view(request):
-    return render(request, 'core/index.html')
+def publication_detail_view(request, slug):
+    publication = get_object_or_404(Publication.objects.select_related('author', 'category').prefetch_related('tags'),slug=slug, status='active')
+    liked_ids = set()
+    cart_ids = set()
+    if request.user.is_authenticated:
+        from accounts.models import Favorite, Cart
+        liked_ids = set(Favorite.objects.filter(user=request.user).values_list('publication_id', flat=True))
+        cart_ids = set(Cart.objects.filter(user=request.user).values_list('publication_id', flat=True))
+    return render(request, 'core/publication_detail.html', {'publication': publication,'liked_ids': liked_ids,'cart_ids': cart_ids})
 
 def publication_list_view(request):
-    return render(request, 'core/index.html')
+    return render(request, 'core/feed.html')
+

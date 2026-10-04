@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_orders.css' %}">
+{% endblock %}
+
+{% block title %}Оплата — Helium{% endblock %}
+
+{% block content %}
+<section class="payment-return-page">
+
+    <div class="payment-return-card">
+        <div class="payment-return-icon"></div>
+
+        <h1>Проверяем оплату...</h1>
+
+        <p>Заказ №{{ order.id }} — {{ order.title }}</p>
+        <p class="hint">Обычно это занимает несколько секунд</p>
+
+        <div class="payment-return-status">
+            {{ order.get_status_display }}
+        </div>
+
+        <div class="payment-return-actions">
+            <a href="{% url 'orders:detail' order.id %}" class="order-btn order-btn-primary">
+                К заказу
+            </a>
+            <a href="{% url 'orders:list' %}" class="order-btn order-btn-danger">
+                Все заказы
+            </a>
+        </div>
+    </div>
+
+</section>
+{% endblock %}

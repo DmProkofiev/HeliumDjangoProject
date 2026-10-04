@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_account.css' %}">
+{% endblock %}
+
+{% block title %}Вход — Helium{% endblock %}
+
+{% block content %}
+<section class="account-box">
+    <h1>Вход</h1>
+
+    <form method="post" class="content-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="error">{{ form.username.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Пароль</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+                <div class="error">{{ form.password.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="error">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+        <button type="submit" class="btn btn-primary">Войти</button>
+        <a class="btn btn-secondary" href="{% url 'core:feed' %}">Отмена</a>
+    </form>
+
+    <p class="text-center">
+        Нет аккаунта? <a href="{% url 'accounts:register' %}">Зарегистрироваться</a>
+    </p>
+</section>
+{% endblock %}

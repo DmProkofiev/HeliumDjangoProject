@@ -53,6 +53,13 @@
 >
 > **Поиск** реализован на PostgreSQL (триграммы + полнотекстовый), Elasticsearch не используется.
 
+За основу и вдохновление взяты следующие известные маркетплейсы:
+> https://aliexpress.ru/       
+> https://www.ozon.ru/      
+> https://www.wildberries.ru/       
+> https://www.amazon.com/       
+> https://www.alibabagroup.com/         
+
 ---
 
 ## Структура проекта Django
@@ -68,4 +75,13 @@
 | `payments`       | Интеграция с YooKassa (эскроу)                      |
 | `search`         | Поиск и автодополнение                              |
 
+## pip list
+- Python 3.x
+- Django
+- Daphne (ASGI-сервер)
+- Pillow (работа с изображениями)
+- python-dotenv (загрузка переменных окружения)
+- yookassa()
 ---
+
+daphne -b 127.0.0.1 -p 8000 main.asgi:application       
