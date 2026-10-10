@@ -10,7 +10,7 @@
 {% block content %}
 <section class="account-layout">
 
-    <!-- ===== САЙДБАР ===== -->
+    <!-- САЙДБАР -->
     <aside class="account-sidebar">
         <div class="sidebar-user">
             <div class="sidebar-avatar">
@@ -67,7 +67,7 @@
         </div>
     </aside>
 
-    <!-- ===== КОНТЕНТНАЯ ОБЛАСТЬ ===== -->
+    <!-- КОНТЕНТНАЯ ОБЛАСТЬ -->
     <div class="account-content">
 
         {% if messages %}
@@ -180,73 +180,148 @@
 
         <!-- КОРЗИНА -->
         <div class="content-panel" id="panel-cart">
-            <h1 class="content-title">
-                Корзина
-                <span class="title-count">{{ cart_items|length }}</span>
-            </h1>
+                    <h1 class="content-title">
+                        Корзина
+                        <span class="title-count">{{ cart_items|length }}</span>
+                    </h1>
 
-            {% if cart_items %}
-                <div class="publication-grid">
-                    {% for item in cart_items %}
-                        <article class="publication-card">
-                            <a href="{% url 'core:publication_detail' item.publication.slug %}" class="publication-link">
-                                <div class="publication-image-wrap">
-                                    {% if item.publication.image %}
-                                        <img src="{{ item.publication.image.url }}" alt="{{ item.publication.title }}" class="publication-image">
-                                    {% else %}
-                                        <div class="publication-placeholder">{{ item.publication.title|first|upper }}</div>
-                                    {% endif %}
+                    {% if cart_items %}
+                        <form method="post" action="{% url 'orders:checkout' %}" id="cart-form">
+                            {% csrf_token %}
+
+                            <div class="cart-list">
+                                {% for item in cart_items %}
+                                    <label class="cart-row" for="cart-item-{{ item.id }}">
+                                        <input type="checkbox"
+                                               name="selected_items"
+                                               value="{{ item.id }}"
+                                               id="cart-item-{{ item.id }}"
+                                               class="cart-checkbox"
+                                               data-price="{{ item.publication.price }}"
+                                               checked>
+
+                                        <div class="cart-row-image">
+                                            {% if item.publication.image %}
+                                                <img src="{{ item.publication.image.url }}" alt="{{ item.publication.title }}">
+                                            {% else %}
+                                                <div class="cart-row-placeholder">{{ item.publication.title|first|upper }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="cart-row-info">
+                                            <div class="cart-row-title">{{ item.publication.title }}</div>
+                                            {% if item.publication.category %}
+                                                <div class="cart-row-category">{{ item.publication.category.name }}</div>
+                                            {% endif %}
+                                            <div class="cart-row-author">Автор: {{ item.publication.author.username }}</div>
+                                        </div>
+
+                                        <div class="cart-row-price">{{ item.publication.price|floatformat:0 }} ₽</div>
+
+                                        <button type="button"
+                                                class="cart-remove-btn"
+                                                title="Убрать из корзины"
+                                                data-remove-url="{% url 'accounts:toggle_cart' item.publication.id %}">
+                                            ×
+                                        </button>
+                                    </label>
+                                {% endfor %}
+                            </div>
+
+                            <div class="cart-summary">
+                                <div class="cart-select-all">
+                                    <label>
+                                        <input type="checkbox" id="select-all" checked>
+                                        Выбрать все
+                                    </label>
                                 </div>
-                                <div class="publication-info">
-                                    <p class="publication-price">{{ item.publication.price|floatformat:0 }} ₽</p>
-                                    <h3 class="publication-title">{{ item.publication.title }}</h3>
+
+                                <div class="cart-total">
+                                    <span>Итого:</span>
+                                    <strong id="cart-total-amount">{{ cart_total|floatformat:0 }} ₽</strong>
                                 </div>
-                            </a>
-                        </article>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="content-empty">
-                    <p>Корзина пуста.</p>
-                </div>
-            {% endif %}
+
+                                <button type="submit" class="cart-checkout-btn" id="cart-checkout-btn">
+                                    Оплатить
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="content-empty">
+                            <p>Корзина пуста</p>
+                            <p class="content-empty-hint">
+                                Добавьте товары со страницы публикации.
+                            </p>
+                        </div>
+                    {% endif %}
         </div>
 
         <!-- СПОСОБЫ ОПЛАТЫ -->
         <div class="content-panel" id="panel-payments">
-            <h1 class="content-title">
-                Способы оплаты
-                <span class="title-count">{{ payment_methods|length }}</span>
-            </h1>
+            <div class="content-title-row">
+                <h1 class="content-title">
+                    Способы оплаты
+                    <span class="title-count">{{ payment_methods|length }}</span>
+                </h1>
+
+                <form method="post"
+                      action="{% url 'accounts:payment_method_add' %}"
+                      class="add-card-form">
+                    {% csrf_token %}
+                    <button type="submit" class="add-card-btn">
+                        <span class="plus-icon">+</span>
+                        Добавить карту
+                    </button>
+                </form>
+            </div>
 
             {% if payment_methods %}
                 <div class="payment-methods-list">
                     {% for method in payment_methods %}
                         <div class="payment-method-card {% if method.is_default %}is-default{% endif %}">
+
+                            <!-- Форма редактирования названия -->
+                            <form method="post"
+                                  action="{% url 'accounts:payment_method_edit' method.id %}?tab=payments"
+                                  class="pm-edit-form">
+                                {% csrf_token %}
+                                <input type="text"
+                                       name="title"
+                                       value="{{ method.title }}"
+                                       placeholder="Название карты"
+                                       maxlength="100"
+                                       class="pm-input">
+                                <button type="submit" class="pm-save-btn" title="Сохранить название">✓</button>
+                            </form>
+
+                            <!-- Данные карты -->
                             <div class="pm-info">
-                                <div class="pm-title">
-                                    {{ method.title|default:'Банковская карта' }}
-                                    {% if method.is_default %}
-                                        <span class="pm-badge">Основная</span>
-                                    {% endif %}
-                                </div>
                                 <div class="pm-card">
                                     {{ method.card_type|default:'Карта' }} •••• {{ method.card_last4 }}
                                 </div>
+                                <div class="pm-date">
+                                    Добавлена {{ method.created_at|date:"d.m.Y" }}
+                                </div>
                             </div>
 
+                            <!-- Флаг "Основная" -->
+                            {% if method.is_default %}
+                                <span class="pm-badge">Основная</span>
+                            {% endif %}
+
+                            <!-- Действия -->
                             <div class="pm-actions">
                                 {% if not method.is_default %}
                                     <form method="post"
-                                          action="{% url 'accounts:payment_method_default' method.id %}">
+                                          action="{% url 'accounts:payment_method_default' method.id %}?tab=payments">
                                         {% csrf_token %}
                                         <button type="submit" class="pm-btn">Сделать основной</button>
                                     </form>
                                 {% endif %}
 
                                 <form method="post"
-                                      action="{% url 'accounts:payment_method_remove' method.id %}"
-                                      onsubmit="return confirm('Удалить эту карту?');">
+                                      action="{% url 'accounts:payment_method_remove' method.id %}?tab=payments"
+                                      onsubmit="return confirm('Удалить карту •••• {{ method.card_last4 }}?');">
                                     {% csrf_token %}
                                     <button type="submit" class="pm-btn pm-btn-danger">Удалить</button>
                                 </form>
@@ -257,8 +332,8 @@
             {% else %}
                 <div class="content-empty">
                     <p>У вас нет сохранённых способов оплаты</p>
-                    <p style="color: #A0AEC0; font-size: 13px; margin-top: 8px;">
-                        Карта сохранится автоматически после первой оплаты заказа.
+                    <p class="content-empty-hint">
+                        Нажмите «Добавить карту» — мы спишем 1 ₽ для проверки и сразу вернём.
                     </p>
                 </div>
             {% endif %}
@@ -272,16 +347,25 @@
     const items = document.querySelectorAll('.menu-item');
     const panels = document.querySelectorAll('.content-panel');
 
-    items.forEach(btn => {
-        btn.addEventListener('click', () => {
-            items.forEach(b => b.classList.remove('menu-active'));
-            panels.forEach(p => p.classList.remove('content-active'));
+    function activateTab(tabName) {
+        items.forEach(b => b.classList.remove('menu-active'));
+        panels.forEach(p => p.classList.remove('content-active'));
 
-            btn.classList.add('menu-active');
-            const panel = document.getElementById('panel-' + btn.dataset.tab);
-            if (panel) panel.classList.add('content-active');
-        });
+        const btn = document.querySelector('.menu-item[data-tab="' + tabName + '"]');
+        const panel = document.getElementById('panel-' + tabName);
+
+        if (btn) btn.classList.add('menu-active');
+        if (panel) panel.classList.add('content-active');
+    }
+
+    items.forEach(btn => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.tab));
     });
+
+    // активация панели из query-параметра ?tab=payments
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab) activateTab(tab);
 })();
 </script>
 {% endblock %}

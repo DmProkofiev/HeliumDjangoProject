@@ -1,7 +1,9 @@
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from core.models import Publication
 from .forms import UserRegistrationForm, UserUpdateForm, UserLoginForm
@@ -9,7 +11,8 @@ from .models import Favorite, Cart, User
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from .models import PaymentMethod
-
+from django.urls import reverse
+from .services import create_binding_payment, refund_binding_payment, find_payment
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -101,3 +104,99 @@ def remove_payment_method_view(request, method_id):
     method.delete()
     messages.success(request, 'Способ оплаты удалён')
     return redirect('accounts:profile')
+
+# Способы оплаты
+
+@login_required
+@require_POST
+def payment_method_add_view(request):
+    method = PaymentMethod.objects.create(user=request.user, is_pending=True)
+    return_url = request.build_absolute_uri(reverse('accounts:payment_method_binding_return', kwargs={'method_id': method.id}))
+    try:
+        result = create_binding_payment(method, return_url)
+    except Exception as e:
+        method.delete()
+        messages.error(request, f'Не удалось начать привязку: {e}')
+        return redirect('/accounts/profile/?tab=payments')
+    method.payment_method_id = result['payment_id']
+    method.save(update_fields=['payment_method_id'])
+    return redirect(result['confirmation_url'])
+
+@login_required
+def payment_method_binding_return_view(request, method_id):
+    """Возврат после оплаты 1 ₽"""
+    return redirect('/accounts/profile/?tab=payments')
+
+@login_required
+@require_POST
+def payment_method_edit_view(request, method_id):
+    """Изменение названия карты"""
+    method = get_object_or_404(PaymentMethod, id=method_id, user=request.user)
+    title = request.POST.get('title', '').strip()
+    if len(title) <= 100:
+        method.title = title
+        method.save(update_fields=['title'])
+    return redirect('/accounts/profile/?tab=payments')
+
+@login_required
+@require_POST
+def payment_method_remove_view(request, method_id):
+    """Удаление карты"""
+    method = get_object_or_404(PaymentMethod, id=method_id, user=request.user)
+    method.delete()
+    messages.success(request, 'Способ оплаты удалён')
+    return redirect('/accounts/profile/?tab=payments')
+
+@login_required
+@require_POST
+def payment_method_default_view(request, method_id):
+    """Сделать карту основной"""
+    method = get_object_or_404(PaymentMethod, id=method_id, user=request.user)
+    method.is_default = True
+    method.save()
+    messages.success(request, 'Карта выбрана по умолчанию')
+    return redirect('/accounts/profile/?tab=payments')
+
+# ВЕБХУК YOOKASSA ДЛЯ ПРИВЯЗКИ КАРТЫ
+@csrf_exempt
+@require_POST
+def yookassa_binding_webhook_view(request):
+    """Приём уведомления от YooKassa о привязке карты"""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest('Invalid JSON')
+    event = data.get('event')
+    payment_obj = data.get('object', {})
+    yookassa_payment_id = payment_obj.get('id')
+    method_id = payment_obj.get('metadata', {}).get('method_id')
+    if not method_id or not yookassa_payment_id:
+        return HttpResponse(status=200)
+    method = PaymentMethod.objects.filter(id=method_id, is_pending=True).first()
+    if not method:
+        return HttpResponse(status=200)
+    try:
+        real_payment = find_payment(yookassa_payment_id)
+    except Exception:
+        return HttpResponseBadRequest('Payment not found')
+    if event != 'payment.succeeded':
+        return HttpResponse(status=200)
+    payment_method_data = getattr(real_payment, 'payment_method', None)
+    if not payment_method_data or not getattr(payment_method_data, 'saved', False):
+        return HttpResponse(status=200)
+    card = getattr(payment_method_data, 'card', None)
+    method.payment_method_id = payment_method_data.id
+    method.card_last4 = card.last4 if card else ''
+    method.card_type = card.card_type if card else ''
+    method.title = f'{(card.card_type if card else "Карта")} •••• {(card.last4 if card else "")}'
+    method.is_pending = False
+    method.save()
+    if not method.user.payment_methods.filter(is_pending=False).exclude(pk=method.pk).exists():
+        method.is_default = True
+        method.save(update_fields=['is_default'])
+    try:
+        refund_binding_payment(yookassa_payment_id)
+    except Exception:
+        pass
+    return HttpResponse(status=200)
+

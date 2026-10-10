@@ -61,12 +61,14 @@ class Cart(models.Model):
 # Способ оплаты
 class PaymentMethod(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_methods', verbose_name='Пользователь')
-    payment_method_id = models.CharField('ID карты в YooKassa', max_length=100, unique=True)
+    payment_method_id = models.CharField('ID карты в YooKassa', max_length=100, unique=True, null=True, blank=True)
     title = models.CharField('Название', max_length=100, blank=True)
     card_last4 = models.CharField('Последние 4 цифры', max_length=4, blank=True)
     card_type = models.CharField('Тип карты', max_length=20, blank=True)
     is_default = models.BooleanField('По умолчанию', default=False)
     created_at = models.DateTimeField('Добавлена', auto_now_add=True)
+    is_verified = models.BooleanField('Проверена', default=True)
+    is_pending = models.BooleanField('В процессе привязки', default=False)
 
     class Meta:
         verbose_name = 'Способ оплаты'

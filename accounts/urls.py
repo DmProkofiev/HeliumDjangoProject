@@ -11,6 +11,10 @@ urlpatterns = [
     path('profile/edit/', views.profile_edit_view, name='profile_edit'),
     path('like/<int:publication_id>/toggle/', views.toggle_like, name='toggle_like'),
     path('cart/<int:publication_id>/toggle/', views.toggle_cart, name='toggle_cart'),
-    path('payment-methods/<int:method_id>/default/', views.set_default_payment_method_view, name='payment_method_default'),
-    path('payment-methods/<int:method_id>/remove/', views.remove_payment_method_view, name='payment_method_remove'),
+    path('payment-methods/add/', views.payment_method_add_view, name='payment_method_add'),
+    path('payment-methods/<int:method_id>/edit/', views.payment_method_edit_view, name='payment_method_edit'),
+    path('payment-methods/<int:method_id>/remove/', views.payment_method_remove_view, name='payment_method_remove'),
+    path('payment-methods/<int:method_id>/default/', views.payment_method_default_view, name='payment_method_default'),
+    path('payment-methods/<int:method_id>/binding-return/', views.payment_method_binding_return_view, name='payment_method_binding_return'),
+    path('webhook/yookassa-binding/', views.yookassa_binding_webhook_view, name='yookassa_binding_webhook'),
 ]
