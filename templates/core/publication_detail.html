@@ -1,114 +1,179 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ publication.title }} — Helium{% endblock %}
-
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/style_publication_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style_comments.css' %}">
 {% endblock %}
+
+{% block title %}{{ publication.title }} — Helium{% endblock %}
 
 {% block content %}
 
 <nav class="breadcrumbs">
     <a href="{% url 'core:feed' %}">Главная</a>
     <span class="breadcrumbs-sep">/</span>
-
     {% if publication.category %}
-        <a href="{% url 'core:publication_list' %}?category={{ publication.category.slug }}">
-            {{ publication.category.name }}
-        </a>
+        <a href="{% url 'core:feed' %}?category={{ publication.category.id }}">{{ publication.category.name }}</a>
         <span class="breadcrumbs-sep">/</span>
     {% endif %}
-
     <span class="breadcrumbs-current">{{ publication.title }}</span>
 </nav>
 
-<article class="product-detail">
+<section class="product-detail">
 
+    {% with images=publication.image_urls total=publication.image_urls|length %}
     <div class="product-detail-gallery">
-        {% if publication.image %}
-            <img src="{{ publication.image.url }}" alt="{{ publication.title }}" class="product-detail-image">
+        {% if total > 1 %}
+            {% for url in images %}
+                <input type="radio"
+                       name="pd-carousel-{{ publication.pk }}"
+                       id="pd-slide-{{ publication.pk }}-{{ forloop.counter0 }}"
+                       class="pd-carousel-input"
+                       {% if forloop.first %}checked{% endif %}>
+            {% endfor %}
+
+            <div class="pd-carousel-track">
+                {% for url in images %}
+                    <div class="pd-carousel-slide">
+                        <img src="{{ url }}"
+                             alt="{{ publication.title }} — фото {{ forloop.counter }}"
+                             class="product-detail-image"
+                             loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+                             draggable="false">
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% for url in images %}
+                <div class="pd-carousel-nav pd-nav-{{ forloop.counter0 }}">
+                    <label for="pd-slide-{{ publication.pk }}-{% if forloop.first %}{{ total|add:'-1' }}{% else %}{{ forloop.counter0|add:'-1' }}{% endif %}"
+                           class="pd-carousel-btn pd-carousel-prev"
+                           aria-label="Предыдущее фото">‹</label>
+                    <label for="pd-slide-{{ publication.pk }}-{% if forloop.last %}0{% else %}{{ forloop.counter0|add:'1' }}{% endif %}"
+                           class="pd-carousel-btn pd-carousel-next"
+                           aria-label="Следующее фото">›</label>
+                </div>
+            {% endfor %}
+
+            <div class="pd-carousel-dots">
+                {% for url in images %}
+                    <label for="pd-slide-{{ publication.pk }}-{{ forloop.counter0 }}"
+                           class="pd-carousel-dot"
+                           aria-label="Фото {{ forloop.counter }}"></label>
+                {% endfor %}
+            </div>
+
+        {% elif total == 1 %}
+            <div class="pd-carousel-track">
+                <div class="pd-carousel-slide">
+                    <img src="{{ images.0 }}"
+                         alt="{{ publication.title }}"
+                         class="product-detail-image"
+                         loading="eager"
+                         draggable="false">
+                </div>
+            </div>
+
         {% else %}
-            <div class="product-detail-placeholder">
-                {{ publication.title|first|upper }}
+            <div class="pd-carousel-track">
+                <div class="pd-carousel-slide">
+                    <div class="product-detail-placeholder">{{ publication.title|first|upper }}</div>
+                </div>
             </div>
         {% endif %}
     </div>
+    {% endwith %}
 
     <div class="product-detail-info">
-
         <h1 class="product-detail-title">{{ publication.title }}</h1>
 
-        <div class="product-detail-price">
-            {{ publication.price|floatformat:0 }} ₽
-        </div>
         {% if publication.category %}
-            <a href="{% url 'core:publication_list' %}?category={{ publication.category.slug }}"
+            <a href="{% url 'core:feed' %}?category={{ publication.category.id }}"
                class="product-detail-category">
                 {{ publication.category.name }}
             </a>
         {% endif %}
+
+        <div class="product-detail-price">{{ publication.get_price_display }}</div>
+
         {% if publication.tags.all %}
             <div class="product-detail-tags">
                 {% for tag in publication.tags.all %}
-                    <span class="product-tag tag-color-{% cycle '0' '1' '2' '3' '4' '5' %}">
-                        #{{ tag.name }}
+                    <span class="product-tag tag-color-{{ forloop.counter0|add:0 }}">
+                        {{ tag.name }}
                     </span>
                 {% endfor %}
             </div>
         {% endif %}
 
         <div class="product-detail-meta">
-            <span class="meta-label">Автор:</span>
+            <span class="meta-label">Автор</span>
             <span class="meta-value">{{ publication.author.username }}</span>
         </div>
 
+        {% if publication.deadline %}
+            <div class="product-detail-meta">
+                <span class="meta-label">Срок выполнения</span>
+                <span class="meta-value">{{ publication.deadline|date:"d.m.Y" }}</span>
+            </div>
+        {% endif %}
+
         <div class="product-detail-meta">
-            <span class="meta-label">Опубликовано:</span>
+            <span class="meta-label">Опубликовано</span>
             <span class="meta-value">{{ publication.created_at|date:"d.m.Y" }}</span>
         </div>
 
         <div class="product-detail-meta">
-            <span class="meta-label">Просмотров:</span>
+            <span class="meta-label">Просмотры</span>
             <span class="meta-value">{{ publication.views }}</span>
+        </div>
+
+        <div class="product-detail-meta">
+            <span class="meta-label">Комментарии</span>
+            <span class="meta-value">{{ publication.comments_count }}</span>
         </div>
 
         <div class="product-detail-actions">
 
-            <form method="post" action="{% url 'accounts:toggle_like' publication.id %}" class="action-form">
+            <form method="post"
+                  action="{% url 'accounts:toggle_like' publication.id %}"
+                  class="action-form ajax-action">
                 {% csrf_token %}
                 <button type="submit"
-                        class="action-btn like-button like-button-large {% if publication.id in liked_ids %}is-liked{% endif %}"
-                        aria-label="Нравится">
-                    <svg class="like-icon" viewBox="0 0 24 24" width="20" height="20">
-                        <path d="M12 21s-7.5-4.35-10-9.5C.5 7 3 3 6.5 3c2 0 3.5 1.5 5.5 4 2-2.5 3.5-4 5.5-4C21 3 23.5 7 22 11.5 19.5 16.65 12 21 12 21z"/>
+                        class="like-button {% if publication.id in liked_ids %}is-liked{% endif %}">
+                    <svg class="like-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 21s-7-4.35-9.5-9A5.5 5.5 0 0 1 12 6.5a5.5 5.5 0 0 1 9.5 5.5C19 16.65 12 21 12 21z"/>
                     </svg>
-                    <span class="like-count">{{ publication.likes }}</span>
+                    <span class="like-count">{{ publication.likes_count }}</span>
                 </button>
             </form>
 
-            <form method="post" action="{% url 'accounts:toggle_cart' publication.id %}" class="action-form action-form-grow">
+            <form method="post"
+                  action="{% url 'accounts:toggle_cart' publication.id %}"
+                  class="action-form action-form-grow ajax-action">
                 {% csrf_token %}
                 <button type="submit"
-                        class="action-btn cart-button cart-button-large {% if publication.id in cart_ids %}is-active{% endif %}">
+                        class="cart-button {% if publication.id in cart_ids %}is-active{% endif %}">
                     <span class="cart-icon"></span>
                     <span class="cart-label">
-                        {% if publication.id in cart_ids %}В корзине{% else %}В корзину{% endif %}
+                        {% if publication.id in cart_ids %}
+                            В корзине
+                        {% else %}
+                            В корзину
+                        {% endif %}
                     </span>
                 </button>
             </form>
 
             {% if user.is_authenticated and user.id != publication.author_id %}
-                <form method="post" action="{% url 'chats:start_from_publication' publication.id %}" class="write-form">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-write">Написать</button>
-                </form>
+                <a href="{% url 'chats:start_from_publication' publication.author.id %}" class="btn-write">
+                    Написать автору
+                </a>
             {% endif %}
-
         </div>
     </div>
-
-</article>
+</section>
 
 <section class="product-detail-description">
     <h2>Описание</h2>
@@ -117,4 +182,127 @@
     </div>
 </section>
 
+<section class="comments-block" id="comments">
+
+    <div class="comments-header">
+        <h2 class="comments-title">
+            Комментарии
+            <span class="comments-count">{{ publication.comments_count }}</span>
+        </h2>
+    </div>
+
+    {% if user.is_authenticated %}
+        <form method="post"
+              action="{% url 'comments:comment_create' publication.slug %}"
+              enctype="multipart/form-data"
+              class="comment-form">
+            {% csrf_token %}
+
+            <div class="comment-form-row">
+                <div class="comment-form-avatar">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="{{ user.username }}">
+                    {% else %}
+                        {{ user.username|first|upper }}
+                    {% endif %}
+                </div>
+
+                <div class="comment-form-body">
+                    <textarea name="text"
+                              rows="3"
+                              class="form-control comment-textarea"
+                              placeholder="Оставьте комментарий…"
+                              required></textarea>
+
+                    <div class="comment-form-attach">
+                        <label for="comment-images-{{ publication.pk }}" class="comment-attach-label">
+                            📎 Прикрепить фото
+                        </label>
+                        <input type="file"
+                               name="images_upload"
+                               id="comment-images-{{ publication.pk }}"
+                               multiple
+                               accept="image/jpeg,image/png,image/gif,image/webp"
+                               class="comment-file-input"
+                               data-preview-target="comment-preview-{{ publication.pk }}">
+                        <span class="comment-attach-hint">
+                            JPG, PNG, GIF, WEBP — до 5 МБ, макс. 5 шт.
+                        </span>
+                    </div>
+
+                    <div class="comment-preview" id="comment-preview-{{ publication.pk }}"></div>
+
+                    <div class="comment-form-actions">
+                        <button type="submit" class="btn btn-primary">Отправить</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% else %}
+        <div class="comments-login-hint">
+            <a href="{% url 'accounts:login' %}">Войдите</a>, чтобы оставить комментарий.
+        </div>
+    {% endif %}
+
+    {% with comments=publication.comments.all %}
+        {% if comments %}
+            <div class="comments-list">
+                {% for comment in comments %}
+                    <article class="comment-item">
+                        <div class="comment-avatar">
+                            {% if comment.author.avatar %}
+                                <img src="{{ comment.author.avatar.url }}" alt="{{ comment.author.username }}">
+                            {% else %}
+                                {{ comment.author.username|first|upper }}
+                            {% endif %}
+                        </div>
+
+                        <div class="comment-body">
+                            <div class="comment-head">
+                                <span class="comment-author">{{ comment.author.username }}</span>
+                                <span class="comment-date">{{ comment.created_at|date:"d.m.Y H:i" }}</span>
+
+                                {% if user.id == comment.author_id %}
+                                    <form method="post"
+                                          action="{% url 'comments:comment_delete' comment.id %}"
+                                          class="comment-action-form"
+                                          onsubmit="return confirm('Удалить комментарий?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="comment-delete-btn" title="Удалить">×</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+
+                            <div class="comment-text">{{ comment.text|linebreaks }}</div>
+
+                            {% with urls=comment.image_urls %}
+                                {% if urls %}
+                                    <div class="comment-images">
+                                        {% for url in urls %}
+                                            <a href="{{ url }}" target="_blank" class="comment-image-link">
+                                                <img src="{{ url }}" alt="Фото {{ forloop.counter }}" loading="lazy">
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="comments-empty">
+                <p>Комментариев пока нет</p>
+                <p class="comments-empty-hint">Будьте первым, кто оставит отзыв</p>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/feed.js' %}" defer></script>
+    <script src="{% static 'js/comments.js' %}" defer></script>
 {% endblock %}

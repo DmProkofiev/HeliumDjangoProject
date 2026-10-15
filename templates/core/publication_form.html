@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_publication_detail.css' %}">
+{% endblock %}
+
+{% block title %}{% if is_edit %}Редактирование{% else %}Новая публикация{% endif %} — Helium{% endblock %}
+
+{% block content %}
+<section class="account-box">
+    <h1>{% if is_edit %}Редактирование{% else %}Новая публикация{% endif %}</h1>
+
+    <form method="post"
+          enctype="multipart/form-data"
+          class="content-form"
+          id="publication-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="error">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="required-mark">*</span>
+                    {% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="field-help">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="error">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="form-group">
+            <label for="images_upload">
+                {% if is_edit %}Добавить фото{% else %}Фотографии{% endif %}
+            </label>
+            <input type="file"
+                   name="images_upload"
+                   id="images_upload"
+                   multiple
+                   accept="image/jpeg,image/png,image/gif,image/webp"
+                   class="form-control pub-images-input"
+                   data-preview-target="pub-images-preview">
+            <small class="field-help">
+                Можно выбрать сразу несколько файлов. Повторный выбор добавляет к уже выбранным.
+                JPG, PNG, GIF, WEBP — до 5 МБ, макс. 10 шт.
+            </small>
+
+            <div class="pub-preview" id="pub-images-preview"></div>
+        </div>
+
+        {% if is_edit %}
+            {% with urls=publication.image_urls %}
+                {% if urls %}
+                    <div class="form-group">
+                        <label>Загруженные фото ({{ urls|length }})</label>
+                        <div class="existing-photos">
+                            {% for url in urls %}
+                                <div class="existing-photo {% if forloop.first %}is-main{% endif %}">
+                                    <img src="{{ url }}" alt="Фото {{ forloop.counter }}">
+
+                                    {% if forloop.first %}
+                                        <span class="photo-main-badge">Основное</span>
+                                    {% else %}
+                                        <button type="submit"
+                                                form="set-main-{{ forloop.counter0 }}"
+                                                class="photo-main-btn"
+                                                title="Сделать основным">★</button>
+                                    {% endif %}
+
+                                    <button type="submit"
+                                            form="remove-photo-{{ forloop.counter0 }}"
+                                            class="photo-remove-btn"
+                                            title="Удалить"
+                                            onclick="return confirm('Удалить это фото?');">×</button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if is_edit %}Сохранить{% else %}Опубликовать{% endif %}
+            </button>
+            <a href="/accounts/profile/?tab=publications" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+
+    {# Скрытые формы для удаления / назначения основного фото — ВНЕ основной формы #}
+    {% if is_edit %}
+        {% with urls=publication.image_urls %}
+            {% for url in urls %}
+                <form id="remove-photo-{{ forloop.counter0 }}"
+                      method="post"
+                      action="{% url 'core:publication_image_remove' publication.slug forloop.counter0 %}"
+                      hidden>
+                    {% csrf_token %}
+                </form>
+                <form id="set-main-{{ forloop.counter0 }}"
+                      method="post"
+                      action="{% url 'core:publication_image_set_main' publication.slug forloop.counter0 %}"
+                      hidden>
+                    {% csrf_token %}
+                </form>
+            {% endfor %}
+        {% endwith %}
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/publication_form.js' %}" defer></script>
+{% endblock %}

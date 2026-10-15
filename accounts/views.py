@@ -72,9 +72,13 @@ def profile_edit_view(request):
 @require_POST
 def toggle_like(request, publication_id):
     publication = get_object_or_404(Publication, id=publication_id)
-    like, created = Favorite.objects.get_or_create(user=request.user,publication=publication)
+    like, created = Favorite.objects.get_or_create(user=request.user, publication=publication)
     if not created:
         like.delete()
+    is_liked = created
+    likes_count = Favorite.objects.filter(publication=publication).count()
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'liked': is_liked, 'likes_count': likes_count})
     return redirect(request.META.get('HTTP_REFERER', 'core:feed'))
 
 @login_required
@@ -84,8 +88,12 @@ def toggle_cart(request, publication_id):
     item = Cart.objects.filter(user=request.user, publication=publication).first()
     if item:
         item.delete()
+        in_cart = False
     else:
         Cart.objects.create(user=request.user, publication=publication)
+        in_cart = True
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'in_cart': in_cart})
     return redirect(request.META.get('HTTP_REFERER', 'core:feed'))
 
 @login_required

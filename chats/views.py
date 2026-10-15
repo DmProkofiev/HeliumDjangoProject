@@ -31,7 +31,7 @@ def chat_detail_view(request, chat_id):
     chat.messages.filter(is_read=False).exclude(author=request.user).update(is_read=True)
     return render(request, 'chats/chat_detail.html', {
         'chat': chat,
-        'messages': chat.messages.select_related('author'),
+        'chat_messages': chat.messages.select_related('author'),
         'other_user': chat.get_other_user(request.user)
     })
 
@@ -85,6 +85,6 @@ def remove_message_view(request, message_id):
 def remove_chat_view(request, chat_id):
     chat = get_object_or_404(Chat, id=chat_id)
     if not chat.has_participant(request.user):
-        raise PermissionDenied('Вы не участник этого чата')
+        raise PermissionDenied('Вы не участник этого диалога')
     chat.delete()
     return redirect('chats:list')

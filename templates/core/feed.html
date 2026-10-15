@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Helium — маркетплейс товаров и услуг{% endblock %}
+{% block title %}Helium маркетплейс товаров и услуг{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/style_feed.css' %}">
@@ -12,106 +12,205 @@
 <section class="hero-banner">
     <div class="hero-content">
         <h1>Множество товаров и услуг в одном месте</h1>
-        <p>Заказывайте у проверенных исполнителей, оплачивайте безопасно</p>
+        <p>Заказывайте у проверенных исполнителей - оплачивайте безопасно</p>
         <div class="hero-actions">
-            <a href="{% url 'core:publication_list' %}" class="btn-hero-primary">Смотреть каталог</a>
-            <a href="{% url 'core:publication_list' %}?type=order" class="btn-hero-outline">Разместить заказ</a>
+
         </div>
     </div>
     <div class="hero-glow"></div>
 </section>
 
-<!-- ===== ЛЕНТА ===== -->
-<section class="feed-section">
-    <div class="feed-header">
-        <h2>Рекомендуем вам</h2>
-        <span class="feed-count">{{ page_obj.paginator.count }} товаров</span>
-    </div>
 
-    {% if page_obj %}
-        <div class="product-grid">
-            {% for pub in page_obj %}
-                <article class="product-card">
+{% if not has_filters %}
+    {% for section in sections %}
+        <section class="feed-section">
+            <div class="feed-header">
+                <h2>
+                    {% if section.category %}
+                        <a href="{% url 'core:publication_list' %}?category={{ section.category.id }}">
+                            {{ section.category.name }}
+                        </a>
+                    {% else %}
+                        {{ section.title }}
+                    {% endif %}
+                </h2>
 
-                    <a href="{% url 'core:publication_detail' pub.slug %}" class="product-link">
-                        <div class="product-image-wrap">
-                            {% if pub.image %}
-                                <img src="{{ pub.image.url }}" alt="{{ pub.title }}" class="product-image">
-                            {% else %}
-                                <div class="product-image-placeholder">{{ pub.title|first|upper }}</div>
-                            {% endif %}
-                        </div>
+                <div class="feed-controls">
+                    {% if section.category %}
+                        <a href="{% url 'core:publication_list'  %}?category={{ section.category.id }}"
+                           class="feed-more">Все →</a>
+                    {% endif %}
 
-                        <div class="product-info">
-                            {% if pub.category %}
-                                <a href="{% url 'core:publication_list' %}?category={{ pub.category.id }}"
-                                   class="product-category"
-                                   onclick="event.stopPropagation();">
-                                    {{ pub.category.name }}
-                                </a>
-                            {% endif %}
-
-                            {% if pub.tags.all %}
-                                <div class="product-tags">
-                                    {% for tag in pub.tags.all %}
-                                        <span class="product-tag tag-color-{{ forloop.counter|divisibleby:6|yesno:'1,0' }}{{ forloop.counter0 }}">
-                                            #{{ tag.name }}
-                                        </span>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-
-                            <p class="product-price">{{ pub.price|floatformat:0 }} ₽</p>
-                            <h3 class="product-title">{{ pub.title }}</h3>
-
-                        </div>
-                    </a>
-
-                    <div class="product-actions">
-                        <form method="post" action="{% url 'accounts:toggle_like' pub.id %}" class="action-form">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="action-btn like-button {% if pub.id in liked_ids %}is-liked{% endif %}"
-                                    aria-label="Нравится">
-                                <svg class="like-icon" viewBox="0 0 24 24" width="16" height="16">
-                                    <path d="M12 21s-7.5-4.35-10-9.5C.5 7 3 3 6.5 3c2 0 3.5 1.5 5.5 4 2-2.5 3.5-4 5.5-4C21 3 23.5 7 22 11.5 19.5 16.65 12 21 12 21z"/>
-                                </svg>
-                                <span class="like-count">{{ pub.likes }}</span>
-                            </button>
-                        </form>
-
-                        <form method="post" action="{% url 'accounts:toggle_cart' pub.id %}" class="action-form action-form-grow">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="action-btn cart-button {% if pub.id in cart_ids %}is-active{% endif %}">
-                                <span class="cart-icon"></span>
-                                <span class="cart-label">
-                                    {% if pub.id in cart_ids %}В корзине{% else %}В корзину{% endif %}
-                                </span>
-                            </button>
-                        </form>
-                    </div>
-
-                </article>
-            {% endfor %}
-        </div>
-
-        {% if is_paginated %}
-            <div class="pagination">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
-                {% endif %}
-                <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">Вперёд</a>
-                {% endif %}
+                    <button type="button"
+                            class="carousel-btn carousel-prev"
+                            data-target="carousel-{{ forloop.counter }}"
+                            aria-label="Назад">‹</button>
+                    <button type="button"
+                            class="carousel-btn carousel-next"
+                            data-target="carousel-{{ forloop.counter }}"
+                            aria-label="Вперёд">›</button>
+                </div>
             </div>
-        {% endif %}
-    {% else %}
+
+            <div class="carousel" id="carousel-{{ forloop.counter }}">
+                <div class="carousel-track">
+                    {% for pub in section.publications %}
+                        <article class="product-card">
+                            <a href="{% url 'core:publication_detail' pub.slug %}" class="product-link">
+                                <div class="product-image-wrap">
+                                    {% if pub.main_image_url %}
+                                        <img src="{{ pub.main_image_url }}" alt="{{ pub.title }}" class="product-image">
+                                    {% else %}
+                                        <div class="product-image-placeholder">{{ pub.title|first|upper }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="product-info">
+                                    <p class="product-price">{{ pub.price|floatformat:0 }} ₽</p>
+                                    <h3 class="product-title">{{ pub.title }}</h3>
+
+                                    {% if pub.tags.all %}
+                                        <div class="product-tags">
+                                            {% for tag in pub.tags.all %}
+                                                <span class="product-tag tag-color-{% cycle '0' '1' '2' '3' '4' '5' %}">
+                                                    #{{ tag.name }}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </a>
+
+                            <div class="product-actions">
+                                <form method="post" action="{% url 'accounts:toggle_like' pub.id %}" class="action-form ajax-action">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="action-btn like-button {% if pub.id in liked_ids %}is-liked{% endif %}"
+                                            aria-label="Нравится">
+                                        <svg class="like-icon" viewBox="0 0 24 24" width="16" height="16">
+                                            <path d="M12 21s-7.5-4.35-10-9.5C.5 7 3 3 6.5 3c2 0 3.5 1.5 5.5 4 2-2.5 3.5-4 5.5-4C21 3 23.5 7 22 11.5 19.5 16.65 12 21 12 21z"/>
+                                        </svg>
+                                        <span class="like-count">{{ pub.likes_count }}</span>
+                                    </button>
+                                </form>
+
+                                <form method="post" action="{% url 'accounts:toggle_cart' pub.id %}" class="action-form action-form-grow ajax-action">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="action-btn cart-button {% if pub.id in cart_ids %}is-active{% endif %}">
+                                        <span class="cart-icon"></span>
+                                        <span class="cart-label">
+                                            {% if pub.id in cart_ids %}В корзине{% else %}В корзину{% endif %}
+                                        </span>
+                                    </button>
+                                </form>
+                            </div>
+
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% empty %}
         <div class="feed-empty">
             <p>Публикаций пока нет</p>
         </div>
-    {% endif %}
-</section>
+    {% endfor %}
 
+
+{% else %}
+    <section class="feed-section">
+        <div class="feed-header">
+            <h2>Рекомендуем вам</h2>
+            <span class="feed-count">{{ page_obj.paginator.count }} товаров</span>
+        </div>
+
+        {% if page_obj %}
+            <div class="product-grid">
+                {% for pub in page_obj %}
+                    <article class="product-card">
+                        <a href="{% url 'core:publication_detail' pub.slug %}" class="product-link">
+                            <div class="product-image-wrap">
+                                {% if pub.main_image_url %}
+                                    <img src="{{ pub.main_image_url }}" alt="{{ pub.title }}" class="product-image">
+                                {% else %}
+                                    <div class="product-image-placeholder">{{ pub.title|first|upper }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="product-info">
+                                {% if pub.category %}
+                                    <a href="{% url 'core:publication_list' %}?category={{ pub.category.id }}"
+                                       class="product-category">
+                                        {{ pub.category.name }}
+                                    </a>
+                                {% endif %}
+
+                                <p class="product-price">{{ pub.price|floatformat:0 }} ₽</p>
+                                <h3 class="product-title">{{ pub.title }}</h3>
+
+                                {% if pub.tags.all %}
+                                    <div class="product-tags">
+                                        {% for tag in pub.tags.all %}
+                                            <span class="product-tag tag-color-{% cycle '0' '1' '2' '3' '4' '5' %}">
+                                                #{{ tag.name }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </a>
+
+                        <div class="product-actions">
+                            <form method="post" action="{% url 'accounts:toggle_like' pub.id %}" class="action-form ajax-action">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="action-btn like-button {% if pub.id in liked_ids %}is-liked{% endif %}"
+                                        aria-label="Нравится">
+                                    <svg class="like-icon" viewBox="0 0 24 24" width="16" height="16">
+                                        <path d="M12 21s-7.5-4.35-10-9.5C.5 7 3 3 6.5 3c2 0 3.5 1.5 5.5 4 2-2.5 3.5-4 5.5-4C21 3 23.5 7 22 11.5 19.5 16.65 12 21 12 21z"/>
+                                    </svg>
+                                    <span class="like-count">{{ pub.likes_count }}</span>
+                                </button>
+                            </form>
+
+                            <form method="post" action="{% url 'accounts:toggle_cart' pub.id %}" class="action-form action-form-grow ajax-action">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="action-btn cart-button {% if pub.id in cart_ids %}is-active{% endif %}">
+                                    <span class="cart-icon"></span>
+                                    <span class="cart-label">
+                                        {% if pub.id in cart_ids %}В корзине{% else %}В корзину{% endif %}
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
+
+                    </article>
+                {% endfor %}
+            </div>
+
+            {% if is_paginated %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">Назад</a>
+                    {% endif %}
+                    <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">Вперёд</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="feed-empty">
+                <p>Публикаций пока нет</p>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/feed.js' %}" defer></script>
 {% endblock %}

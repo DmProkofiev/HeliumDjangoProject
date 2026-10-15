@@ -1,9 +1,7 @@
-/* HELIUM — ЛИЧНЫЙ КАБИНЕТ */
 
 (function () {
     'use strict';
 
-    // ПЕРЕКЛЮЧЕНИЕ ПАНЕЛЕЙ
     const menuItems = document.querySelectorAll('.menu-item');
     const panels = document.querySelectorAll('.content-panel');
 
@@ -71,7 +69,6 @@
             recalcTotal();
         });
     }
-
     // УДАЛЕНИЕ ТОВАРА ИЗ КОРЗИНЫ
     const removeForm = document.getElementById('cart-remove-form');
 

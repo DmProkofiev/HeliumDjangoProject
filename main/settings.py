@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'core',
     'orders',
     'chats',
-    'channels'
+    'channels',
+    'comments'
 ]
 
 MIDDLEWARE = [
@@ -114,13 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    }
 ]
 
 
@@ -145,6 +140,12 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+PUBLICATION_STORAGE_ROOT = BASE_DIR / 'PublicationStorage'
+PUBLICATION_STORAGE_URL = '/publication-files/'
+
+COMMENT_STORAGE_ROOT = os.path.join(BASE_DIR, 'comment_files')
+COMMENT_STORAGE_URL = '/comment-files/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

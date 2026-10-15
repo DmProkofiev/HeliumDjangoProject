@@ -66,6 +66,8 @@
             </a>
         </div>
     </aside>
+
+    <!-- КОНТЕНТНАЯ ОБЛАСТЬ -->
     <div class="account-content">
 
         {% if messages %}
@@ -110,10 +112,17 @@
 
         <!-- МОИ ПУБЛИКАЦИИ -->
         <div class="content-panel" id="panel-publications">
-            <h1 class="content-title">
-                Мои публикации
-                <span class="title-count">{{ my_publications|length }}</span>
-            </h1>
+            <div class="content-title-row">
+                <h1 class="content-title">
+                    Мои публикации
+                    <span class="title-count">{{ my_publications|length }}</span>
+                </h1>
+
+                <a href="{% url 'core:publication_create' %}" class="add-card-btn">
+                    <span class="plus-icon">+</span>
+                    Создать публикацию
+                </a>
+            </div>
 
             {% if my_publications %}
                 <div class="publication-grid">
@@ -121,8 +130,8 @@
                         <article class="publication-card">
                             <a href="{% url 'core:publication_detail' pub.slug %}" class="publication-link">
                                 <div class="publication-image-wrap">
-                                    {% if pub.image %}
-                                        <img src="{{ pub.image.url }}" alt="{{ pub.title }}" class="publication-image">
+                                    {% if pub.main_image_url %}
+                                        <img src="{{ pub.main_image_url }}" alt="{{ pub.title }}" class="publication-image">
                                     {% else %}
                                         <div class="publication-placeholder">{{ pub.title|first|upper }}</div>
                                     {% endif %}
@@ -130,14 +139,32 @@
                                 <div class="publication-info">
                                     <p class="publication-price">{{ pub.price|floatformat:0 }} ₽</p>
                                     <h3 class="publication-title">{{ pub.title }}</h3>
+                                    <span class="publication-status status-{{ pub.status }}">
+                                        {{ pub.get_status_display }}
+                                    </span>
                                 </div>
                             </a>
+
+                            <div class="publication-controls">
+                                <a href="{% url 'core:publication_update' pub.slug %}" class="pub-btn">
+                                    Редактировать
+                                </a>
+                                <form method="post"
+                                      action="{% url 'core:publication_remove' pub.slug %}"
+                                      onsubmit="return confirm('Удалить публикацию «{{ pub.title }}»?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="pub-btn pub-btn-danger">Удалить</button>
+                                </form>
+                            </div>
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
                 <div class="content-empty">
                     <p>У вас пока нет публикаций</p>
+                    <p class="content-empty-hint">
+                        Нажмите «Создать публикацию», чтобы разместить первую услугу или товар
+                    </p>
                 </div>
             {% endif %}
         </div>
@@ -155,8 +182,8 @@
                         <article class="publication-card">
                             <a href="{% url 'core:publication_detail' fav.publication.slug %}" class="publication-link">
                                 <div class="publication-image-wrap">
-                                    {% if fav.publication.image %}
-                                        <img src="{{ fav.publication.image.url }}" alt="{{ fav.publication.title }}" class="publication-image">
+                                    {% if fav.publication.main_image_url %}
+                                        <img src="{{ fav.publication.main_image_url }}" alt="{{ fav.publication.title }}" class="publication-image">
                                     {% else %}
                                         <div class="publication-placeholder">{{ fav.publication.title|first|upper }}</div>
                                     {% endif %}
@@ -199,8 +226,8 @@
                                        checked>
 
                                 <label for="cart-item-{{ item.id }}" class="cart-row-image">
-                                    {% if item.publication.image %}
-                                        <img src="{{ item.publication.image.url }}" alt="{{ item.publication.title }}">
+                                    {% if item.publication.main_image_url %}
+                                        <img src="{{ item.publication.main_image_url }}" alt="{{ item.publication.title }}">
                                     {% else %}
                                         <div class="cart-row-placeholder">{{ item.publication.title|first|upper }}</div>
                                     {% endif %}
@@ -245,7 +272,6 @@
                     </div>
                 </form>
 
-                <!-- Скрытая форма для удаления товаров -->
                 <form method="post" id="cart-remove-form" style="display: none;">
                     {% csrf_token %}
                 </form>
@@ -332,7 +358,7 @@
                 <div class="content-empty">
                     <p>У вас нет сохранённых способов оплаты</p>
                     <p class="content-empty-hint">
-                        Нажмите «Добавить карту» — мы спишем 1 ₽ для проверки и сразу вернём.
+                        Нажмите «Добавить карту» — мы спишем 1 ₽ для проверки и сразу вернём
                     </p>
                 </div>
             {% endif %}

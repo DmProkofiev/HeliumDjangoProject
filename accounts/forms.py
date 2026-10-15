@@ -3,7 +3,14 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User
 
 class UserRegistrationForm(UserCreationForm):
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}), label='Email')
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Email'
+        }),
+        label='Email'
+    )
 
     class Meta:
         model = User
