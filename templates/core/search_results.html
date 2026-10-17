@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Поиск — Helium{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_feed.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="feed-section">
+    <div class="feed-header">
+        {% if has_query %}
+            <h2>Результаты по запросу «{{ query }}» — {{ total }} шт.</h2>
+        {% else %}
+            <h2>Все публикации — {{ total }} шт.</h2>
+        {% endif %}
+    </div>
+
+    {% if page_obj.object_list %}
+        <div class="product-grid">
+            {% for pub in page_obj %}
+                <article class="product-card">
+                    <a href="{% url 'core:publication_detail' pub.slug %}" class="product-link">
+                        <div class="product-image-wrap">
+                            {% if pub.main_image_url %}
+                                <img src="{{ pub.main_image_url }}" alt="{{ pub.title }}" class="product-image">
+                            {% else %}
+                                <div class="product-image-placeholder">{{ pub.title|first|upper }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="product-info">
+                            <p class="product-price">{{ pub.price|floatformat:0 }} ₽</p>
+                            <h3 class="product-title">{{ pub.title }}</h3>
+                            {% if pub.tags.all %}
+                                <div class="product-tags">
+                                    {% for tag in pub.tags.all %}
+                                        <span class="product-tag tag-color-{% cycle '0' '1' '2' '3' '4' '5' %}">#{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </a>
+
+                    <div class="product-actions">
+                        <form method="post" action="{% url 'accounts:toggle_like' pub.id %}" class="action-form">
+                            {% csrf_token %}
+                            <button type="submit" class="action-btn like-button {% if pub.id in liked_ids %}is-liked{% endif %}">
+                                <svg class="like-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <path d="M12 21s-7.5-4.35-10-9.5C.5 7 3 3 6.5 3c2 0 3.5 1.5 5.5 4 2-2.5 3.5-4 5.5-4C21 3 23.5 7 22 11.5 19.5 16.65 12 21 12 21z"/>
+                                </svg>
+                                <!-- ВАЖНО: здесь likes_count_annotated -->
+                                <span class="like-count">{{ pub.likes_count_annotated }}</span>
+                            </button>
+                        </form>
+
+                        <form method="post" action="{% url 'accounts:toggle_cart' pub.id %}" class="action-form action-form-grow">
+                            {% csrf_token %}
+                            <button type="submit" class="action-btn cart-button {% if pub.id in cart_ids %}is-active{% endif %}">
+                                <span class="cart-icon"></span>
+                                <span class="cart-label">{% if pub.id in cart_ids %}В корзине{% else %}В корзину{% endif %}</span>
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}">Назад</a>
+                {% endif %}
+                <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}">Вперёд</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="feed-empty">
+            {% if has_query %}
+                <p>По запросу «{{ query }}» ничего не найдено.</p>
+            {% else %}
+                <p>Введите поисковый запрос (минимум 2 символа).</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

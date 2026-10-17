@@ -148,4 +148,3 @@ class Publication(models.Model):
     @property
     def likes_count(self):
         return self.favorited_by.count()
-

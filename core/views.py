@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from accounts.models import Favorite, Cart
-from core import publication_service
+from core import publication_service, search_service
 from core.forms import PublicationForm
 from core.models import Publication, Category, Tag
 
@@ -58,14 +58,11 @@ def feed_view(request):
     sections = []
     if not has_filters:
         categories_with_pubs = Category.objects.annotate(pubs_count=Count('publications', filter=Q(publications__status='active'))).filter(pubs_count__gt=0).order_by('name')
-
         base_qs = (Publication.objects.filter(status='active').select_related('author', 'category').prefetch_related('tags').annotate(likes_count_annotated=Count('favorited_by', distinct=True)))
-
         for category in categories_with_pubs:
             pubs = list(base_qs.filter(category=category).order_by('-created_at'))
             if pubs:
                 sections.append({'category': category, 'publications': pubs})
-
         no_category_pubs = list(base_qs.filter(category__isnull=True).order_by('-created_at'))
         if no_category_pubs:
             sections.append({
@@ -88,9 +85,10 @@ def feed_view(request):
         'liked_ids': liked_ids,
         'cart_ids': cart_ids,
         'sections': sections,
-        'has_filters': has_filters,
+        'has_filters': has_filters
     })
 
+# детализация отображения публикации
 def publication_detail_view(request, slug):
     publication = get_object_or_404(
         Publication.objects
@@ -108,17 +106,30 @@ def publication_detail_view(request, slug):
         cart_ids = set(Cart.objects.filter(user=request.user).values_list('publication_id', flat=True))
     return render(request, 'core/publication_detail.html', {'publication': publication,'liked_ids': liked_ids,'cart_ids': cart_ids})
 
+# публикации одной категории
 def publication_list_view(request):
-    category_id = request.GET.get('category')
+    category_val = request.GET.get('category')
     category = None
+
+    # Базовый запрос: только активные товары
     publications = (
         Publication.objects
+        .filter(status='active')
         .select_related('author', 'category')
         .annotate(likes_count_annotated=Count('favorited_by', distinct=True))
     )
-    if category_id:
-        category = get_object_or_404(Category, id=category_id)
-        publications = publications.filter(category=category)
+
+    # Если в URL есть параметр category
+    if category_val:
+        if str(category_val).isdigit():
+            # Пришел ID (например, ?category=3)
+            category = Category.objects.filter(id=int(category_val)).first()
+            publications = publications.filter(category_id=int(category_val))
+        else:
+            # Пришел SLUG (например, ?category=elektronika)
+            category = Category.objects.filter(slug=category_val).first()
+            publications = publications.filter(category__slug=category_val)
+
     # Сортировка
     sort = request.GET.get('sort', 'new')
     if sort == 'price_asc':
@@ -127,28 +138,68 @@ def publication_list_view(request):
         publications = publications.order_by('-price')
     else:
         publications = publications.order_by('-created_at')
+
+    # Пагинация
     paginator = Paginator(publications, 24)
     page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Лайки и корзина для текущего пользователя
     liked_ids, cart_ids = set(), set()
     if request.user.is_authenticated:
-        liked_ids = set(
-            Favorite.objects.filter(user=request.user)
-            .values_list('publication_id', flat=True)
-        )
-        cart_ids = set(
-            Cart.objects.filter(user=request.user)
-            .values_list('publication_id', flat=True)
-        )
-    context = {
+        liked_ids = set(Favorite.objects.filter(user=request.user).values_list('publication_id', flat=True))
+        cart_ids = set(Cart.objects.filter(user=request.user).values_list('publication_id', flat=True))
+
+    return render(request, 'core/publication_list.html', {
         'category': category,
         'page_obj': page_obj,
-        'publications': page_obj.object_list,
         'sort': sort,
         'liked_ids': liked_ids,
         'cart_ids': cart_ids,
         'is_paginated': page_obj.has_other_pages(),
-    }
-    return render(request, 'core/publication_list.html', context)
+    })
+
+# def publication_list_view(request):
+#     category_id = request.GET.get('category')
+#     category = None
+#     publications = (
+#         Publication.objects
+#         .filter(status='active')
+#         .select_related('author', 'category')
+#         .annotate(likes_count=Count('favorited_by', distinct=True))
+#     )
+#     if category_id:
+#         category = get_object_or_404(Category, id=category_id)
+#         publications = publications.filter(category=category)
+#     # Сортировка
+#     sort = request.GET.get('sort', 'new')
+#     if sort == 'price_asc':
+#         publications = publications.order_by('price')
+#     elif sort == 'price_desc':
+#         publications = publications.order_by('-price')
+#     else:
+#         publications = publications.order_by('-created_at')
+#     paginator = Paginator(publications, 24)
+#     page_obj = paginator.get_page(request.GET.get('page'))
+#     liked_ids, cart_ids = set(), set()
+#     if request.user.is_authenticated:
+#         liked_ids = set(
+#             Favorite.objects.filter(user=request.user)
+#             .values_list('publication_id', flat=True)
+#         )
+#         cart_ids = set(
+#             Cart.objects.filter(user=request.user)
+#             .values_list('publication_id', flat=True)
+#         )
+#     context = {
+#         'category': category,
+#         'page_obj': page_obj,
+#         'publications': page_obj.object_list,
+#         'sort': sort,
+#         'liked_ids': liked_ids,
+#         'cart_ids': cart_ids,
+#         'is_paginated': page_obj.has_other_pages(),
+#     }
+#     return render(request, 'core/publication_list.html', context)
 
 # CRUD publication
 @login_required
@@ -156,7 +207,6 @@ def publication_create_view(request):
     if request.method == 'POST':
         form = PublicationForm(request.POST, request.FILES)
         files = request.FILES.getlist('images_upload')   # ← все файлы
-
         if form.is_valid():
             publication_service.create_publication(form, request.user, files)
             messages.success(request, 'Публикация создана')
@@ -168,14 +218,12 @@ def publication_create_view(request):
         'is_edit': False,
     })
 
-
 @login_required
 def publication_update_view(request, slug):
     publication = publication_service.get_publication_for_edit(slug, request.user)
     if request.method == 'POST':
         form = PublicationForm(request.POST, request.FILES, instance=publication)
         files = request.FILES.getlist('images_upload')
-
         if form.is_valid():
             publication_service.update_publication(publication, form, files)
             messages.success(request, 'Изменения сохранены')
@@ -212,3 +260,30 @@ def publication_image_set_main_view(request, slug, index):
     publication_service.set_main_image(publication, index, request.user)
     messages.success(request, 'Основное фото обновлено')
     return redirect('core:publication_update', slug=slug)
+
+# поиск
+def search_view(request):
+    result = search_service.search_publications(
+        query=request.GET.get('q', ''),
+        category=request.GET.get('category'),
+        tag=request.GET.get('tag'),
+        price_min=request.GET.get('price_min'),
+        price_max=request.GET.get('price_max'),
+        sort=request.GET.get('sort'),
+        page=request.GET.get('page', 1),
+    )
+
+    liked_ids, cart_ids = set(), set()
+    if request.user.is_authenticated:
+        liked_ids = set(Favorite.objects.filter(user=request.user)
+                        .values_list('publication_id', flat=True))
+        cart_ids = set(Cart.objects.filter(user=request.user)
+                       .values_list('publication_id', flat=True))
+
+    return render(request, 'core/search_results.html', {
+        **result,
+        'categories': Category.objects.all(),
+        'tags': Tag.objects.all(),
+        'liked_ids': liked_ids,
+        'cart_ids': cart_ids,
+    })

@@ -167,9 +167,12 @@
             </form>
 
             {% if user.is_authenticated and user.id != publication.author_id %}
-                <a href="{% url 'chats:start_from_publication' publication.author.id %}" class="btn-write">
-                    Написать автору
-                </a>
+                <form method="post"
+                      action="{% url 'chats:start_from_publication' publication.id %}"
+                      class="btn-write-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-write">Написать</button>
+                </form>
             {% endif %}
         </div>
     </div>

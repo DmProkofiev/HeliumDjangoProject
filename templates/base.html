@@ -32,8 +32,17 @@
                 </div>
             </div>
 
-            <form method="get" action="{% url 'core:publication_list' %}" class="search-form">
-                <input type="text" name="q" placeholder="Найдется что угодно" class="search-input">
+            <form method="get" action="{% url 'core:search' %}" class="search-form" role="search">
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Найдется что угодно"
+                    class="search-input"
+                    value="{{ request.GET.q|default:'' }}"
+                    autocomplete="off"
+                    minlength="2"
+                    aria-label="Поисковый запрос"
+                >
                 <button type="submit" class="search-btn" aria-label="Найти">
                     <span class="icon-search"></span>
                 </button>
