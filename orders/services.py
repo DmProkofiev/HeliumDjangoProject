@@ -13,7 +13,7 @@ def create_payment_for_checkout(payment, return_url):
                 'value': f'{payment.amount:.2f}',
                 'currency': 'RUB',
             },
-            'capture': False,  # холдирование
+            'capture': False,
             'confirmation': {
                 'type': 'redirect',
                 'return_url': return_url,

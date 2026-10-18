@@ -39,10 +39,8 @@
     });
 })();
 
-/* AJAX лайки и корзина без перезагрузки страницы */
 (function () {
     'use strict';
-
     function getCookie(name) {
         const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
         return m ? m.pop() : '';

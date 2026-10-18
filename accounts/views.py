@@ -1,5 +1,5 @@
 import json
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect, get_object_or_404
@@ -12,7 +12,13 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from .models import PaymentMethod
 from django.urls import reverse
-from .services import create_binding_payment, refund_binding_payment, find_payment
+from .pay_service import (
+    create_binding_payment,
+    refund_binding_payment,
+    find_payment,
+    handle_binding_webhook,
+)
+from recommendations.logging_service import log_interaction
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -68,6 +74,16 @@ def profile_edit_view(request):
         form = UserUpdateForm(instance=request.user)
     return render(request, 'accounts/profile_edit.html', {'form': form})
 
+def account_user_detail_view(request, username):
+    User = get_user_model()
+    author = get_object_or_404(User, username=username)
+    publications = Publication.objects.filter(author=author,status='active').select_related('category').order_by('-created_at')
+    context = {
+        'author': author,
+        'publications': publications,
+    }
+    return render(request, 'accounts/account_user_detail.html', context)
+
 @login_required
 @require_POST
 def toggle_like(request, publication_id):
@@ -75,6 +91,8 @@ def toggle_like(request, publication_id):
     like, created = Favorite.objects.get_or_create(user=request.user, publication=publication)
     if not created:
         like.delete()
+    else:
+        log_interaction(request, 'like', publication=publication)
     is_liked = created
     likes_count = Favorite.objects.filter(publication=publication).count()
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -88,9 +106,18 @@ def toggle_cart(request, publication_id):
     item = Cart.objects.filter(user=request.user, publication=publication).first()
     if item:
         item.delete()
+        in_cart = False
     else:
         Cart.objects.create(user=request.user, publication=publication)
-    return redirect(request.META.get('HTTP_REFERER', 'core:feed'))
+        log_interaction(request, 'cart', publication=publication)
+        in_cart = True
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'in_cart': in_cart,
+            'cart_count': Cart.objects.filter(user=request.user).count(),
+        })
+
+    return redirect(request.META.get('HTTP_REFERER') or 'core:feed')
 
 @login_required
 @require_POST
@@ -110,7 +137,6 @@ def remove_payment_method_view(request, method_id):
     return redirect('accounts:profile')
 
 # Способы оплаты
-
 @login_required
 @require_POST
 def payment_method_add_view(request):
@@ -164,43 +190,11 @@ def payment_method_default_view(request, method_id):
 # ВЕБХУК YOOKASSA ДЛЯ ПРИВЯЗКИ КАРТЫ
 @csrf_exempt
 @require_POST
+@csrf_exempt
+@require_POST
 def yookassa_binding_webhook_view(request):
-    """Приём уведомления от YooKassa о привязке карты"""
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return HttpResponseBadRequest('Invalid JSON')
-    event = data.get('event')
-    payment_obj = data.get('object', {})
-    yookassa_payment_id = payment_obj.get('id')
-    method_id = payment_obj.get('metadata', {}).get('method_id')
-    if not method_id or not yookassa_payment_id:
-        return HttpResponse(status=200)
-    method = PaymentMethod.objects.filter(id=method_id, is_pending=True).first()
-    if not method:
-        return HttpResponse(status=200)
-    try:
-        real_payment = find_payment(yookassa_payment_id)
-    except Exception:
-        return HttpResponseBadRequest('Payment not found')
-    if event != 'payment.succeeded':
-        return HttpResponse(status=200)
-    payment_method_data = getattr(real_payment, 'payment_method', None)
-    if not payment_method_data or not getattr(payment_method_data, 'saved', False):
-        return HttpResponse(status=200)
-    card = getattr(payment_method_data, 'card', None)
-    method.payment_method_id = payment_method_data.id
-    method.card_last4 = card.last4 if card else ''
-    method.card_type = card.card_type if card else ''
-    method.title = f'{(card.card_type if card else "Карта")} •••• {(card.last4 if card else "")}'
-    method.is_pending = False
-    method.save()
-    if not method.user.payment_methods.filter(is_pending=False).exclude(pk=method.pk).exists():
-        method.is_default = True
-        method.save(update_fields=['is_default'])
-    try:
-        refund_binding_payment(yookassa_payment_id)
-    except Exception:
-        pass
-    return HttpResponse(status=200)
-
+    return handle_binding_webhook(data)

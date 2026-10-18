@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль {{ author.username }} — Helium{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style_account_user_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="feed-section">
+    <div class="author-header-card">
+        {% if author.avatar %}
+            <img src="{{ author.avatar.url }}" alt="{{ author.username }}" class="author-avatar-big">
+        {% else %}
+            <div class="author-avatar-big">{{ author.username|first|upper }}</div>
+        {% endif %}
+
+        <div class="author-meta">
+            <h1>{{ author.username }}</h1>
+            <p>На сайте с {{ author.date_joined|date:"d.m.Y" }}</p>
+            <p>Активных публикаций: <strong>{{ publications.count }}</strong></p>
+        </div>
+    </div>
+
+    <div class="feed-header">
+        <h2>Товары и услуги исполнителя</h2>
+    </div>
+
+    {% if publications %}
+        <div class="product-grid">
+            {% for pub in publications %}
+                <article class="product-card">
+                    <a href="{% url 'core:publication_detail' pub.slug %}" class="product-link">
+                        <div class="product-image-wrap">
+                            {% if pub.main_image_url %}
+                                <img src="{{ pub.main_image_url }}" alt="{{ pub.title }}" class="product-image">
+                            {% else %}
+                                <div class="product-image-placeholder">{{ pub.title|first|upper }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="product-info">
+                            {% if pub.category %}
+                                <span class="product-category">{{ pub.category.name }}</span>
+                            {% endif %}
+                            <p class="product-price">{{ pub.price|floatformat:0 }} ₽</p>
+                            <h3 class="product-title">{{ pub.title }}</h3>
+                        </div>
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="feed-empty">
+            <p>У этого исполнителя пока нет товаров/услуг</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

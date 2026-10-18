@@ -109,7 +109,16 @@
 
         <div class="product-detail-meta">
             <span class="meta-label">Автор</span>
-            <span class="meta-value">{{ publication.author.username }}</span>
+            <a href="{% url 'accounts:account_user_detail' publication.author.username %}" class="meta-value" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+                {% if publication.author.avatar %}
+                    <img src="{{ publication.author.avatar.url }}" alt="{{ publication.author.username }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #6496ff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">
+                        {{ publication.author.username|first|upper }}
+                    </div>
+                {% endif %}
+                <span style="font-weight: 500;">{{ publication.author.username }}</span>
+            </a>
         </div>
 
         {% if publication.deadline %}
@@ -243,7 +252,7 @@
         </form>
     {% else %}
         <div class="comments-login-hint">
-            <a href="{% url 'accounts:login' %}">Войдите</a>, чтобы оставить комментарий.
+            <a href="{% url 'accounts:login' %}">Войдите</a>, чтобы оставить комментарий
         </div>
     {% endif %}
 

@@ -17,4 +17,5 @@ urlpatterns = [
     path('payment-methods/<int:method_id>/default/', views.payment_method_default_view, name='payment_method_default'),
     path('payment-methods/<int:method_id>/binding-return/', views.payment_method_binding_return_view, name='payment_method_binding_return'),
     path('webhook/yookassa-binding/', views.yookassa_binding_webhook_view, name='yookassa_binding_webhook'),
+    path('user/<str:username>/', views.account_user_detail_view, name='account_user_detail'),
 ]
