@@ -182,6 +182,374 @@
     border-radius: 0 0 2px 2px;
 }
 
+/* ИКОНКА "МОИ ЗАКАЗЫ" */
+
+.menu-icon.icon-orders::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 1px;
+    height: 13px;
+    border: 2px solid #4A5568;
+    border-radius: 2px;
+}
+
+.menu-icon.icon-orders::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    top: 4px;
+    height: 2px;
+    background: #4A5568;
+    box-shadow: 0 4px 0 #4A5568, 0 8px 0 #4A5568;
+    border-radius: 1px;
+}
+
+.menu-item.menu-active .menu-icon.icon-orders::before {
+    border-color: #0A2540;
+}
+
+.menu-item.menu-active .menu-icon.icon-orders::after {
+    background: #0A2540;
+    box-shadow: 0 4px 0 #0A2540, 0 8px 0 #0A2540;
+}
+.menu-section-label {
+    margin: 8px 12px 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #A0AEC0;
+    font-weight: 700;
+}
+
+/* Форма поиска / фильтра в админ-панелях */
+.admin-search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-search-input {
+    flex: 1;
+    min-width: 220px;
+    padding: 9px 14px;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1A202C;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-search-input:focus {
+    border-color: #00FF88;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.35);
+}
+
+.admin-search-select {
+    padding: 9px 14px;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1A202C;
+    background: #FFFFFF;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Обёртка и таблица */
+.admin-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #EDF2F7;
+    border-radius: 12px;
+    background: #FFFFFF;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 12px 14px;
+    background: #F7FAFC;
+    color: #4A5568;
+    font-weight: 700;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    border-bottom: 1px solid #EDF2F7;
+}
+
+.admin-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #F0F4F8;
+    color: #1A202C;
+    vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table tbody tr:hover td {
+    background: rgba(0, 180, 255, 0.04);
+}
+
+/* Ячейка с набором кнопок */
+.admin-actions-cell {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 260px;
+}
+
+.admin-actions-cell .pm-btn {
+    padding: 6px 10px;
+    font-size: 12.5px;
+}
+
+/* Ссылки и подсказки */
+.admin-link {
+    color: #0077B6;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.admin-link:hover {
+    color: #00B4A6;
+    text-decoration: underline;
+}
+
+.admin-hint {
+    color: #A0AEC0;
+    font-size: 12.5px;
+    font-style: italic;
+}
+
+/* Бейджи статуса */
+.admin-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    background: #EDF2F7;
+    color: #4A5568;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.admin-badge-super {
+    background: rgba(155, 81, 224, 0.12);
+    color: #6B2FB5;
+}
+
+.admin-badge-admin {
+    background: rgba(0, 180, 255, 0.12);
+    color: #0077B6;
+}
+
+.admin-badge-active {
+    background: rgba(0, 255, 136, 0.15);
+    color: #00824A;
+}
+
+.admin-badge-blocked {
+    background: rgba(229, 57, 53, 0.12);
+    color: #C62828;
+}
+
+/* Акцентная кнопка для действий администратора */
+.pm-btn.pm-btn-primary {
+    background: linear-gradient(135deg, #00B4FF, #00FF88);
+    color: #0A2540;
+    border: none;
+    font-weight: 700;
+}
+
+.pm-btn.pm-btn-primary:hover {
+    color: #0A2540;
+    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Адаптив для админ-панелей */
+@media (max-width: 700px) {
+    .admin-search-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-search-input,
+    .admin-search-select {
+        width: 100%;
+    }
+
+    .admin-actions-cell {
+        min-width: auto;
+        flex-direction: column;
+    }
+
+    .admin-actions-cell .pm-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.pm-card {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #4A5568;
+    font-family: 'Consolas', monospace;
+    margin-bottom: 4px;
+}
+
+.pm-card-type {
+    font-family: inherit;
+    font-weight: 700;
+    color: #2D3748;
+    letter-spacing: 0;
+}
+
+.pm-card-mask {
+    color: #A0AEC0;
+    letter-spacing: 2px;
+}
+
+.pm-card-last4 {
+    color: #1A202C;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 3px;
+    padding-left: 2px;
+}
+
+.pm-card.pm-card-pending {
+    font-family: inherit;
+    color: #B26A00;
+    font-style: italic;
+    letter-spacing: 0;
+}
+
+.pm-card.pm-card-empty {
+    font-family: inherit;
+    color: #A0AEC0;
+    letter-spacing: 0;
+}
+
+/* МОИ ЗАКАЗЫ В ЛИЧНОМ КАБИНЕТЕ */
+.account-orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.account-order-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 16px;
+    padding: 14px 18px;
+    background: #FFFFFF;
+    border: 1px solid #EDF2F7;
+    border-radius: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.account-order-card:hover {
+    border-color: rgba(0, 255, 136, 0.4);
+    box-shadow: 0 6px 18px rgba(10, 37, 64, 0.06);
+}
+
+.account-order-main {
+    min-width: 0;
+}
+
+.account-order-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1A202C;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-order-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 12.5px;
+    color: #718096;
+}
+
+.account-order-role {
+    color: #0077B6;
+    font-weight: 700;
+}
+
+.account-order-amount {
+    font-size: 17px;
+    font-weight: 800;
+    color: #1A202C;
+    align-self: flex-start;
+    white-space: nowrap;
+}
+
+.account-order-footer {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #EDF2F7;
+    flex-wrap: wrap;
+}
+
+.account-order-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+
+.account-order-actions .pm-btn {
+    padding: 7px 14px;
+}
+
+@media (max-width: 700px) {
+    .account-order-card {
+        padding: 12px 14px;
+    }
+
+    .account-order-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .account-order-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .account-order-actions .pm-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
 /* Сердечко (избранное) */
 .menu-icon.icon-heart {
     background: #4A5568;

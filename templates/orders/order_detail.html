@@ -10,7 +10,6 @@
 {% block content %}
 <section class="order-detail-page">
 
-    <!-- Заголовок -->
     <div class="order-detail-header">
         <h1>{{ order.title }}</h1>
         <span class="order-status status-{{ order.status }}">
@@ -18,7 +17,6 @@
         </span>
     </div>
 
-    <!-- Метаинформация -->
     <div class="order-card">
         <h2>Информация о заказе</h2>
 
@@ -57,13 +55,6 @@
                 </div>
             {% endif %}
 
-            {% if order.deadline %}
-                <div class="order-meta-row">
-                    <span class="order-meta-label">Срок выполнения</span>
-                    <span class="order-meta-value">{{ order.deadline|date:"d.m.Y" }}</span>
-                </div>
-            {% endif %}
-
             <div class="order-meta-row">
                 <span class="order-meta-label">Создан</span>
                 <span class="order-meta-value">{{ order.created_at|date:"d.m.Y H:i" }}</span>
@@ -79,9 +70,11 @@
             </div>
         </div>
     {% endif %}
+
     <div class="order-actions">
-        {% if order.status == 'pending_payment' and request.user.id == order.customer_id %}
-            <form method="post" action="{% url 'orders:pay' order.id %}">
+        {# Кнопка "Оплатить" — через связанный Payment, а не сам Order #}
+        {% if order.status == 'pending_payment' and request.user.id == order.customer_id and order.payment_id %}
+            <form method="post" action="{% url 'orders:pay_payment' order.payment_id %}">
                 {% csrf_token %}
                 <button type="submit" class="order-btn order-btn-primary">
                     Оплатить {{ order.amount|floatformat:0 }} ₽

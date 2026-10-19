@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/style_orders.css' %}">
+{% endblock %}
+
+{% block title %}Платёж №{{ payment.id }} — Helium{% endblock %}
+
+{% block content %}
+<section class="order-detail-page">
+    <div class="order-detail-header">
+        <h1>Платёж №{{ payment.id }}</h1>
+        <span class="order-status status-{{ payment.status }}">
+            {{ payment.get_status_display }}
+        </span>
+    </div>
+
+    <div class="order-card">
+        <h2>Информация о платеже</h2>
+
+        <div class="order-meta">
+            <div class="order-meta-row">
+                <span class="order-meta-label">К оплате</span>
+                <span class="order-meta-value amount">{{ payment.amount|floatformat:2 }} ₽</span>
+            </div>
+            <div class="order-meta-row">
+                <span class="order-meta-label">Создан</span>
+                <span class="order-meta-value">{{ payment.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            {% if payment.payment_id %}
+                <div class="order-meta-row">
+                    <span class="order-meta-label">Идентификатор YooKassa</span>
+                    <span class="order-meta-value">{{ payment.payment_id }}</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if payment.status == 'pending' %}
+        <div class="order-actions">
+            <form method="post" action="{% url 'orders:pay_payment' payment.id %}">
+                {% csrf_token %}
+                <button type="submit" class="order-btn order-btn-primary">
+                    Оплатить {{ payment.amount|floatformat:2 }} ₽
+                </button>
+            </form>
+            <a href="{% url 'orders:list' %}" class="order-btn order-btn-danger">
+                Мои заказы
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="order-card">
+        <h2>Заказы</h2>
+        {% if payment.orders.all %}
+            <ul class="order-list">
+                {% for order in payment.orders.all %}
+                    <li class="order-item">
+                        <a href="{% url 'orders:detail' order.id %}">
+                            <span class="order-title">{{ order.title }}</span>
+                            <span class="order-amount">{{ order.amount|floatformat:2 }} ₽</span>
+                            <span class="order-status status-{{ order.status }}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: #A0AEC0; font-size: 14px;">Заказов нет</p>
+        {% endif %}
+    </div>
+
+</section>
+{% endblock %}

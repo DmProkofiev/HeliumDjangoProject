@@ -13,21 +13,33 @@
     <div class="payment-return-card">
         <div class="payment-return-icon"></div>
 
-        <h1>Проверяем оплату...</h1>
+        {# Заголовок зависит от статуса платежа #}
+        {% if payment.status == 'succeeded' %}
+            <h1>Оплата успешна</h1>
+            <p>Средства зарезервированы и будут переведены исполнителю после подтверждения.</p>
+        {% elif payment.status == 'failed' %}
+            <h1>Оплата не прошла</h1>
+            <p>Платёж был отменён. Попробуйте оформить заказ заново.</p>
+        {% elif payment.status == 'refunded' %}
+            <h1>Средства возвращены</h1>
+            <p>Возврат выполнен. Проверьте баланс в течение 1–3 рабочих дней.</p>
+        {% else %}
+            <h1>Проверяем оплату...</h1>
+            <p class="hint">Обычно это занимает несколько секунд</p>
+        {% endif %}
 
-        <p>Заказ №{{ order.id }} — {{ order.title }}</p>
-        <p class="hint">Обычно это занимает несколько секунд</p>
+        <p>Платёж №{{ payment.id }} — {{ payment.amount|floatformat:2 }} ₽</p>
 
         <div class="payment-return-status">
-            {{ order.get_status_display }}
+            {{ payment.get_status_display }}
         </div>
 
         <div class="payment-return-actions">
-            <a href="{% url 'orders:detail' order.id %}" class="order-btn order-btn-primary">
-                К заказу
+            <a href="{% url 'orders:payment_detail' payment.id %}" class="order-btn order-btn-primary">
+                К платежу
             </a>
             <a href="{% url 'orders:list' %}" class="order-btn order-btn-danger">
-                Все заказы
+                Мои заказы
             </a>
         </div>
     </div>

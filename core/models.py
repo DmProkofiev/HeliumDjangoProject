@@ -49,6 +49,7 @@ class Publication(models.Model):
         ('in_progress', 'В работе'),
         ('closed', 'Закрыта'),
         ('archived', 'Архивирована'),
+        ('frozen', 'Заблокирована'),
     )
     PRICE_TYPE_CHOICES = (
         ('fixed', 'Фиксированная'),

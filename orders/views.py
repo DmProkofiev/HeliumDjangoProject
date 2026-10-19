@@ -2,17 +2,20 @@ import json
 import logging
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+
 from accounts.models import Cart
 from .models import Payment, Order, Transaction
+from .security import is_yookassa_request
 from .services import (
     create_payment_for_checkout,
     find_payment,
@@ -22,12 +25,16 @@ from .services import (
 
 logger = logging.getLogger(__name__)
 
+
 # ОФОРМЛЕНИЕ ЗАКАЗА
-@login_required
-@require_POST
+
 @login_required
 @require_POST
 def checkout_view(request):
+    """
+    Оформляет корзину в Payment + набор Order, затем редиректит на YooKassa.
+    Вся работа с БД — в одной транзакции.
+    """
     with transaction.atomic():
         cart_items = list(
             Cart.objects
@@ -36,9 +43,11 @@ def checkout_view(request):
             .select_related('publication', 'publication__author')
         )
         cart_items = [i for i in cart_items if i.publication.author_id != request.user.id]
+
         if not cart_items:
             messages.error(request, 'Корзина пуста')
             return redirect('/accounts/profile/?tab=cart')
+
         total_amount = sum(
             (i.publication.price or Decimal('0')) * i.quantity
             for i in cart_items
@@ -46,11 +55,13 @@ def checkout_view(request):
         if total_amount <= 0:
             messages.error(request, 'Некорректная сумма заказа')
             return redirect('/accounts/profile/?tab=cart')
+
         payment = Payment.objects.create(
             customer=request.user,
             amount=total_amount,
             status='pending',
         )
+
         for item in cart_items:
             pub = item.publication
             Order.objects.create(
@@ -64,27 +75,37 @@ def checkout_view(request):
                 amount=(pub.price or Decimal('0')) * item.quantity,
                 status='pending_payment',
             )
+
         Cart.objects.filter(id__in=[i.id for i in cart_items]).delete()
+
     logger.info(
         'Checkout: payment #%s created for user %s, amount=%s',
         payment.id, request.user.id, total_amount,
     )
-    #ПЛАТЕЖ В ЮKASSA
+
     return_url = request.build_absolute_uri(
         reverse('orders:payment_return', kwargs={'payment_id': payment.id})
     )
     try:
         result = create_payment_for_checkout(payment, return_url)
-    except RuntimeError as e:
+    except RuntimeError as exc:
         logger.exception('Failed to create YooKassa payment for Payment #%s', payment.id)
-        messages.error(request, f'Не удалось создать платёж: {e}')
+        messages.error(request, f'Не удалось создать платёж: {exc}')
         return redirect('orders:payment_detail', payment_id=payment.id)
-    return redirect(result['confirmation_url'])
+
+    return _handle_payment_creation_result(request, payment, result)
+
 
 # ОПЛАТА
+
 @login_required
 @require_POST
 def pay_payment_view(request, payment_id):
+    """
+    Повторный платёж по существующему Payment (после отмены/неудачи/возврата
+    пользователя назад). Идемпотентность обеспечивается Payment.idempotence_key:
+    YooKassa вернёт тот же платёж, а мы по его статусу решим, куда редиректить.
+    """
     payment = get_object_or_404(Payment, id=payment_id)
     if payment.customer_id != request.user.id:
         raise PermissionDenied('Это не ваш платёж')
@@ -93,23 +114,30 @@ def pay_payment_view(request, payment_id):
     if not payment.orders.exists():
         messages.error(request, 'Платёж не содержит заказов')
         return redirect('orders:payment_detail', payment_id=payment.id)
+
     return_url = request.build_absolute_uri(
         reverse('orders:payment_return', kwargs={'payment_id': payment.id})
     )
     try:
         result = create_payment_for_checkout(payment, return_url)
-    except RuntimeError as e:
+    except RuntimeError as exc:
         logger.exception('Failed to create YooKassa payment for Payment #%s', payment.id)
-        messages.error(request, f'Не удалось создать платёж: {e}')
+        messages.error(request, f'Не удалось создать платёж: {exc}')
         return redirect('orders:payment_detail', payment_id=payment.id)
-    return redirect(result['confirmation_url'])
+
+    return _handle_payment_creation_result(request, payment, result)
 
 
 @login_required
 def payment_return_view(request, payment_id):
+    """
+    Возврат пользователя после оплаты.
+    Пытается синхронизировать статус напрямую, но не блокирует страницу при ошибке.
+    """
     payment = get_object_or_404(Payment, id=payment_id)
     if payment.customer_id != request.user.id:
         raise PermissionDenied('Это не ваш платёж')
+
     if payment.status == 'pending' and payment.payment_id:
         try:
             real = find_payment(payment.payment_id)
@@ -120,8 +148,10 @@ def payment_return_view(request, payment_id):
 
     return render(request, 'orders/payment_return.html', {'payment': payment})
 
+
 @login_required
 def payment_detail_view(request, payment_id):
+    """Экран платежа: сумма, статус, список привязанных заказов."""
     payment = get_object_or_404(
         Payment.objects.prefetch_related('orders__transactions'),
         id=payment_id,
@@ -132,22 +162,27 @@ def payment_detail_view(request, payment_id):
 
 
 # ДЕЙСТВИЯ ПО ЗАКАЗАМ
+
 @login_required
 @require_POST
 def confirm_order_view(request, order_id):
+    """Подтверждение выполнения заказа заказчиком; деньги уходят исполнителю."""
     order = get_object_or_404(Order, id=order_id)
     if order.customer_id != request.user.id:
         raise PermissionDenied('Это не ваш заказ')
     if not order.can_be_confirmed():
         raise PermissionDenied('Нельзя подтвердить в текущем статусе')
+
     order.confirm_completion()
     logger.info('Order #%s confirmed by customer %s', order.id, request.user.id)
     messages.success(request, 'Заказ завершён')
     return redirect('orders:detail', order_id=order.id)
 
+
 @login_required
 @require_POST
 def cancel_order_view(request, order_id):
+    """Отмена заказа с возвратом средств, если они были заморожены."""
     order = get_object_or_404(Order, id=order_id)
     if order.customer_id != request.user.id and order.executor_id != request.user.id:
         raise PermissionDenied('Вы не участник этой сделки')
@@ -157,9 +192,9 @@ def cancel_order_view(request, order_id):
     if order.payment and order.payment.payment_id and order.status == 'escrow_held':
         try:
             refund_payment(order.payment.payment_id, order.amount)
-        except Exception as e:
+        except Exception as exc:
             logger.exception('Refund failed for Order #%s', order.id)
-            messages.error(request, f'Ошибка возврата: {e}')
+            messages.error(request, f'Ошибка возврата: {exc}')
             return redirect('orders:detail', order_id=order.id)
 
     order.cancel_and_refund()
@@ -167,17 +202,24 @@ def cancel_order_view(request, order_id):
     messages.success(request, 'Заказ отменён')
     return redirect('orders:detail', order_id=order.id)
 
+
 # СПИСКИ
+
 @login_required
 def order_list_view(request):
-    as_customer = Order.objects.filter(
-        customer=request.user
-    ).select_related('executor', 'publication', 'payment').order_by('-created_at')
-
-    as_executor = Order.objects.filter(
-        executor=request.user
-    ).select_related('customer', 'publication', 'payment').order_by('-created_at')
-
+    """Показывает заказы пользователя в двух ролях: заказчик и исполнитель."""
+    as_customer = (
+        Order.objects
+        .filter(customer=request.user)
+        .select_related('executor', 'publication', 'payment')
+        .order_by('-created_at')
+    )
+    as_executor = (
+        Order.objects
+        .filter(executor=request.user)
+        .select_related('customer', 'publication', 'payment')
+        .order_by('-created_at')
+    )
     return render(request, 'orders/order_list.html', {
         'as_customer': as_customer,
         'as_executor': as_executor,
@@ -186,9 +228,11 @@ def order_list_view(request):
 
 @login_required
 def order_detail_view(request, order_id):
+    """Детальная карточка заказа; доступна только участникам."""
     order = get_object_or_404(
-        Order.objects.select_related('customer', 'executor', 'publication', 'payment')
-                      .prefetch_related('transactions'),
+        Order.objects
+        .select_related('customer', 'executor', 'publication', 'payment')
+        .prefetch_related('transactions'),
         id=order_id,
     )
     if request.user.id not in (order.customer_id, order.executor_id):
@@ -196,54 +240,80 @@ def order_detail_view(request, order_id):
     return render(request, 'orders/order_detail.html', {'order': order})
 
 
-# ============================================================
 # ЕДИНЫЙ ВЕБХУК YOOKASSA
-# ============================================================
 
 @csrf_exempt
 @require_POST
 def yookassa_webhook_view(request):
+    """
+    Единая точка приёма вебхуков YooKassa.
+    Проверяет IP отправителя, затем диспетчеризует по metadata.
+    """
+    if not is_yookassa_request(request):
+        logger.warning('Webhook: forbidden source ip=%s', request.META.get('REMOTE_ADDR'))
+        return HttpResponseForbidden('Forbidden')
+
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return HttpResponseBadRequest('Invalid JSON')
+
     obj = data.get('object', {})
     yookassa_payment_id = obj.get('id')
     metadata = obj.get('metadata', {})
+
     if 'method_id' in metadata:
         from accounts.pay_service import handle_binding_webhook
         return handle_binding_webhook(data)
 
     if 'payment_id' not in metadata or not yookassa_payment_id:
         return HttpResponse(status=200)
+
     payment = Payment.objects.filter(id=metadata['payment_id']).first()
     if not payment:
         logger.warning('Webhook: Payment #%s not found', metadata['payment_id'])
         return HttpResponse(status=200)
     if payment.status == 'succeeded':
         return HttpResponse(status=200)
+
     try:
         real = find_payment(yookassa_payment_id)
     except Exception:
         logger.exception('Webhook: cannot fetch YooKassa payment %s', yookassa_payment_id)
         return HttpResponseBadRequest('Payment not found')
+
     return _sync_payment_state(payment, real)
 
+
 def _sync_payment_state(payment, real_payment):
-    # Проверка суммы — через Decimal, не через str
+    """
+    Приводит Payment в актуальное состояние по данным YooKassa:
+    - cancelled -> failed + отмена заказов
+    - waiting_for_capture -> capture на полную сумму
+    - succeeded -> финализация (холдирование + escrow-статус заказов)
+    """
+    recipient = getattr(real_payment, 'recipient', None)
+    if recipient:
+        account_id = getattr(recipient, 'account_id', None)
+        if account_id and account_id != settings.YOOKASSA_SHOP_ID:
+            logger.error('Webhook: recipient mismatch for Payment #%s', payment.id)
+            return HttpResponseBadRequest('Recipient mismatch')
+
     try:
         real_amount = Decimal(str(real_payment.amount.value))
     except (AttributeError, InvalidOperation, ValueError):
         logger.error('Invalid YooKassa amount for Payment #%s', payment.id)
         return HttpResponseBadRequest('Invalid amount')
+
     if real_amount != payment.amount:
         logger.error(
             'Amount mismatch for Payment #%s: DB=%s, YooKassa=%s',
             payment.id, payment.amount, real_amount,
         )
         return HttpResponseBadRequest('Amount mismatch')
+
     status = getattr(real_payment, 'status', None)
-    # Отмена
+
     if status == 'canceled':
         with transaction.atomic():
             p = Payment.objects.select_for_update().get(id=payment.id)
@@ -253,7 +323,7 @@ def _sync_payment_state(payment, real_payment):
                 p.orders.update(status='cancelled')
         logger.info('Payment #%s canceled', payment.id)
         return HttpResponse(status=200)
-    #Холдирование capture на полную сумму
+
     if status == 'waiting_for_capture':
         try:
             capture_payment(real_payment.id, payment.amount)
@@ -261,29 +331,39 @@ def _sync_payment_state(payment, real_payment):
                 'Captured YooKassa payment %s for %s',
                 real_payment.id, payment.amount,
             )
-        except Exception as e:
+        except Exception as exc:
             logger.exception('Capture failed for Payment #%s', payment.id)
-            return HttpResponseBadRequest(f'Capture failed: {e}')
+            return HttpResponseBadRequest(f'Capture failed: {exc}')
+
         try:
             real_payment = find_payment(real_payment.id)
         except Exception:
             logger.exception('Re-fetch after capture failed for Payment #%s', payment.id)
             return HttpResponse(status=200)
+
         status = getattr(real_payment, 'status', None)
+
     if status == 'succeeded':
         _finalize_payment_success(payment, real_payment.id)
+
     return HttpResponse(status=200)
 
 
 def _finalize_payment_success(payment, yookassa_payment_id):
+    """
+    Финализация успешного платежа: статус succeeded, Transaction hold,
+    заказы в escrow_held, очистка корзины. Идемпотентна.
+    """
     with transaction.atomic():
         p = Payment.objects.select_for_update().get(id=payment.id)
         if p.status == 'succeeded':
             return
+
         p.status = 'succeeded'
         if not p.payment_id:
             p.payment_id = yookassa_payment_id
         p.save(update_fields=['status', 'payment_id', 'updated_at'])
+
         Transaction.objects.create(
             payment=p,
             type='hold',
@@ -291,8 +371,58 @@ def _finalize_payment_success(payment, yookassa_payment_id):
             amount=p.amount,
             external_id=yookassa_payment_id,
         )
+
         for order in p.orders.all():
             order.mark_as_escrow_held()
+
         pub_ids = list(p.orders.values_list('publication_id', flat=True))
         Cart.objects.filter(user=p.customer, publication_id__in=pub_ids).delete()
+
     logger.info('Payment #%s finalized, orders moved to escrow_held', payment.id)
+
+
+# ОБРАБОТКА РЕЗУЛЬТАТА СОЗДАНИЯ ПЛАТЕЖА
+
+def _handle_payment_creation_result(request, payment, result):
+    """
+    Единая обработка ответа create_payment_for_checkout.
+    Возможные сценарии:
+    - есть confirmation_url  -> редирект на YooKassa (обычный путь);
+    - canceled               -> помечаем failed, отменяем заказы;
+    - waiting_for_capture    -> синхронизируем (capture) и показываем «в обработке»;
+    - succeeded              -> синхронизируем и показываем «уже оплачен».
+    """
+    confirmation_url = result.get('confirmation_url')
+    if confirmation_url:
+        return redirect(confirmation_url)
+
+    remote_status = result.get('status')
+    remote_id = result.get('payment_id')
+
+    if remote_status == 'canceled':
+        with transaction.atomic():
+            payment.status = 'failed'
+            payment.save(update_fields=['status', 'updated_at'])
+            payment.orders.update(status='cancelled')
+        messages.error(request, 'Платёж был отменён. Оформите заказ заново.')
+        return redirect('orders:payment_detail', payment_id=payment.id)
+
+    # succeeded / waiting_for_capture — синхронизируем состояние с YooKassa
+    try:
+        real = find_payment(remote_id)
+        _sync_payment_state(payment, real)
+        payment.refresh_from_db()
+    except Exception:
+        logger.exception(
+            'Не удалось синхронизировать платёж #%s после идемпотентного ответа',
+            payment.id,
+        )
+
+    if payment.status == 'succeeded':
+        messages.success(request, 'Платёж уже оплачен')
+    elif payment.status == 'failed':
+        messages.error(request, 'Платёж не прошёл. Оформите заказ заново.')
+    else:
+        messages.info(request, 'Платёж находится в обработке. Проверьте статус позже.')
+
+    return redirect('orders:payment_detail', payment_id=payment.id)

@@ -1,8 +1,15 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+
 from .models import User
 
+
 @admin.register(User)
-class UserAdmin(UserAdmin):
-    fieldsets = UserAdmin.fieldsets + (('Дополнительная информация', {'fields': ('phone', 'city', 'avatar')}),)
-    list_display = ('username', 'email', 'phone', 'city', 'avatar','is_staff')
+class UserAdmin(DjangoUserAdmin):
+    fieldsets = DjangoUserAdmin.fieldsets + (
+        ('Дополнительная информация', {
+            'fields': ('phone', 'city', 'avatar', 'role'),
+        }),
+    )
+    list_display = ('username', 'email', 'role', 'phone', 'city', 'avatar', 'is_staff', 'is_active')
+    list_filter = DjangoUserAdmin.list_filter + ('role',)

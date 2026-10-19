@@ -42,7 +42,7 @@
     </div>
 
     <div id="messages" class="chat-messages">
-        {% for message in chat_messages %}    ← было `messages`, стало `chat_messages`
+        {% for message in chat_messages %}
             <div class="message {% if message.author_id == request.user.id %}message-own{% else %}message-other{% endif %}"
                  data-message-id="{{ message.id }}">
                 <div class="message-bubble">

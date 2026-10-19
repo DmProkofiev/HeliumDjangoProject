@@ -94,11 +94,16 @@
             <button type="submit" class="btn btn-primary">
                 {% if is_edit %}Сохранить{% else %}Опубликовать{% endif %}
             </button>
-            <a href="/accounts/profile/?tab=publications" class="btn btn-secondary">Отмена</a>
+            {% if is_admin_edit %}
+                <a href="{% url 'accounts:account_detail' %}?tab=admin-publications"
+                   class="btn btn-secondary">Отмена</a>
+            {% else %}
+                <a href="{% url 'accounts:account_detail' %}?tab=publications"
+                   class="btn btn-secondary">Отмена</a>
+            {% endif %}
         </div>
     </form>
 
-    {# Скрытые формы для удаления / назначения основного фото — ВНЕ основной формы #}
     {% if is_edit %}
         {% with urls=publication.image_urls %}
             {% for url in urls %}
